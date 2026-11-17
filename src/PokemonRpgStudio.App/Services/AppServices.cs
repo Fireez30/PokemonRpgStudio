@@ -260,6 +260,7 @@ public static class BitmapCache
         {
             if (Cache.TryGetValue(key, out var cached)) return cached;
         }
+        // Two threads may decode the same file at once (UI + background sprite): harmless, the first one is kept.
         Bitmap? bmp = null;
         try
         {
@@ -273,10 +274,23 @@ public static class BitmapCache
         {
             bmp = null;
         }
-        lock (Lock) Cache[key] = bmp;
+        lock (Lock)
+        {
+            if (Cache.TryGetValue(key, out var first)) return first;
+            Cache[key] = bmp;
+        }
         return bmp;
     }
 
     public static Bitmap? ForPokemon(string? name, int decodeWidth = 256) =>
         Load(AppServices.Current.Images.Resolve(name), decodeWidth);
+
+    /// <summary>The sprite if it was already decoded (or is known to be missing), without touching the disk.</summary>
+    public static bool TryGetPokemon(string? name, int decodeWidth, out Bitmap? bitmap)
+    {
+        bitmap = null;
+        var path = AppServices.Current.Images.Resolve(name);
+        if (string.IsNullOrEmpty(path)) return true; // no sprite file: nothing to load
+        lock (Lock) return Cache.TryGetValue(path + "|" + decodeWidth, out bitmap);
+    }
 }

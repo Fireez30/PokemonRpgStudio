@@ -118,7 +118,7 @@
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="vm:SheetListItem">
               <Grid ColumnDefinitions="44,*,Auto">
-                <Image Width="40" Height="40" Source="{Binding PokemonName, Converter={x:Static c:PokemonImageConverter.Instance}, ConverterParameter=96}" />
+                <Image Width="40" Height="40" c:Sprite.DecodeWidth="96" c:Sprite.Pokemon="{Binding PokemonName}" />
                 <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
                   <TextBlock Text="{Binding Nickname}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                   <TextBlock Text="{Binding Subtitle}" Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis" />
@@ -157,7 +157,7 @@
                     <StackPanel Orientation="Horizontal">
                       <Button Command="{Binding ActivateCommand}" Padding="8,4,4,4" ToolTip.Tip="{Binding Nickname}">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                          <Image Width="24" Height="24" Source="{Binding PokemonName, Converter={x:Static c:PokemonImageConverter.Instance}, ConverterParameter=96}" />
+                          <Image Width="24" Height="24" c:Sprite.DecodeWidth="96" c:Sprite.Pokemon="{Binding PokemonName}" />
                           <TextBlock Classes="tabname" Text="{Binding Nickname}" MaxWidth="160" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                         </StackPanel>
                       </Button>
@@ -229,7 +229,7 @@
             <Border Classes="card">
               <Grid ColumnDefinitions="Auto,*">
                 <Border Classes="subtle" Width="112" Height="112" Margin="0,0,16,0" VerticalAlignment="Top">
-                  <Image Source="{Binding ImageName, Converter={x:Static c:PokemonImageConverter.Instance}}" />
+                  <Image c:Sprite.Pokemon="{Binding ImageName}" />
                 </Border>
                 <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
                   <c:TypeBadges Types="{Binding Types}" BadgeFontSize="13" />
@@ -320,8 +320,8 @@
                   <TextBlock Grid.Column="3" Classes="th" Text="Current (temp)" />
                   <TextBlock Grid.Column="4" Classes="th" Text="Combat stages" Margin="20,2,4,2" />
                 </Grid>
-                <ItemsControl ItemsSource="{Binding Stats}">
-                  <ItemsControl.ItemTemplate>
+                <c:RecyclingItems ItemsSource="{Binding Stats}">
+                  <c:RecyclingItems.ItemTemplate>
                     <DataTemplate x:DataType="vm:PlayStatRow">
                       <Border Classes="row">
                         <Grid ColumnDefinitions="90,170,70,150,*">
@@ -343,8 +343,8 @@
                         </Grid>
                       </Border>
                     </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                  </c:RecyclingItems.ItemTemplate>
+                </c:RecyclingItems>
                 <ContentControl Content="{Binding NoteStats}" />
               </StackPanel>
             </Border>
@@ -356,8 +356,8 @@
                   <TextBlock Classes="section-title" Text="Moves" />
                   <Button Grid.Column="1" Classes="small" Content="Enable all" Command="{Binding EnableAllMovesCommand}" IsVisible="{Binding HasDisabledMoves}" />
                 </Grid>
-                <ItemsControl ItemsSource="{Binding Moves}">
-                  <ItemsControl.ItemTemplate>
+                <c:RecyclingItems ItemsSource="{Binding Moves}">
+                  <c:RecyclingItems.ItemTemplate>
                     <DataTemplate x:DataType="vm:PlayMoveRow">
                       <StackPanel>
                         <Border Height="2" Background="{DynamicResource AccentText}" Margin="0,8" IsVisible="{Binding StartsSecondTable}" Opacity="0.6" />
@@ -403,8 +403,8 @@
                         </Border>
                       </StackPanel>
                     </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                  </c:RecyclingItems.ItemTemplate>
+                </c:RecyclingItems>
                 <TextBlock Classes="muted" FontSize="12" Margin="0,6,0,0" Text="No moves yet: edit the sheet to add some." IsVisible="{Binding HasNoMoves}" />
                 <ContentControl Content="{Binding NoteMoves}" />
               </StackPanel>
@@ -461,16 +461,16 @@
                 <StackPanel Spacing="8">
                   <TextBlock Classes="section-title" Text="Abilities" />
                   <TextBlock Classes="muted" Text="No ability chosen." IsVisible="{Binding HasNoAbilities}" />
-                  <ItemsControl ItemsSource="{Binding Abilities}">
-                    <ItemsControl.ItemTemplate>
+                  <c:RecyclingItems ItemsSource="{Binding Abilities}">
+                    <c:RecyclingItems.ItemTemplate>
                       <DataTemplate x:DataType="vm:AbilityInfo">
                         <StackPanel Margin="0,0,0,10" Spacing="2">
                           <TextBlock Text="{Binding Name}" FontWeight="Bold" />
                           <TextBlock Text="{Binding Effect}" TextWrapping="Wrap" FontSize="12" />
                         </StackPanel>
                       </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                    </c:RecyclingItems.ItemTemplate>
+                  </c:RecyclingItems>
                   <ContentControl Content="{Binding NoteAbilities}" />
                 </StackPanel>
               </Border>
@@ -481,8 +481,8 @@
                       <TextBlock Classes="section-title" Text="Skills" />
                       <Button Grid.Column="1" Classes="small" Content="Clear bonuses" Command="{Binding ResetSkillModifiersCommand}" IsVisible="{Binding HasSkillModifiers}" />
                     </Grid>
-                    <ItemsControl ItemsSource="{Binding Skills}">
-                      <ItemsControl.ItemTemplate>
+                    <c:RecyclingItems ItemsSource="{Binding Skills}">
+                      <c:RecyclingItems.ItemTemplate>
                         <DataTemplate x:DataType="vm:PlaySkillRow">
                           <Grid ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,1">
                             <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
@@ -495,24 +495,24 @@
                             <Button Grid.Column="3" Classes="small" Content="🎲" Command="{Binding RollCommand}" IsEnabled="{Binding CanRoll}" ToolTip.Tip="Roll this skill (bonus included)" />
                           </Grid>
                         </DataTemplate>
-                      </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                      </c:RecyclingItems.ItemTemplate>
+                    </c:RecyclingItems>
                     <ContentControl Content="{Binding NoteSkills}" />
                   </StackPanel>
                 </Border>
                 <Border Classes="card">
                   <StackPanel Spacing="4">
                     <TextBlock Classes="section-title" Text="Capabilities" />
-                    <ItemsControl ItemsSource="{Binding Capabilities}">
-                      <ItemsControl.ItemTemplate>
+                    <c:RecyclingItems ItemsSource="{Binding Capabilities}">
+                      <c:RecyclingItems.ItemTemplate>
                         <DataTemplate x:DataType="vm:KeyValueRow">
                           <Grid ColumnDefinitions="*,Auto" Margin="0,1">
                             <TextBlock Text="{Binding Key}" TextWrapping="Wrap" />
                             <TextBlock Grid.Column="1" Text="{Binding Value}" FontWeight="SemiBold" Margin="8,0,0,0" />
                           </Grid>
                         </DataTemplate>
-                      </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                      </c:RecyclingItems.ItemTemplate>
+                    </c:RecyclingItems>
                     <ContentControl Content="{Binding NoteCapabilities}" />
                   </StackPanel>
                 </Border>

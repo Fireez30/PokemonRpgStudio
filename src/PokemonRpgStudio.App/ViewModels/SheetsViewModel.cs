@@ -442,6 +442,8 @@ public sealed partial class SheetsViewModel : PageViewModel
         NoteCapabilities = new SectionNote("capabilities", "Notes on capabilities", OnNoteChanged);
         _notesTimer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(0.8) };
         _notesTimer.Tick += (_, _) => FlushNotes();
+        _filterTimer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        _filterTimer.Tick += (_, _) => ApplyFilter();
         CustomStats = new (string Key, string Label)[] { ("HP", "HP"), ("ATK", "ATK"), ("DEF", "DEF"), ("SPATK", "SP.ATK"), ("SPDEF", "SP.DEF"), ("SPD", "SPEED") }
             .Select(x => new CustomStatOption(x.Key, x.Label, UpdateCustomStatsSummary)).ToList();
         services.LibraryChanged += () => { ReloadLibrary(); ReloadTeams(); _diskWatch.MarkSeen(); };
@@ -643,14 +645,22 @@ public sealed partial class SheetsViewModel : PageViewModel
         SelectedTeam = Teams.FirstOrDefault(t => t.Id == selected);
     }
 
-    partial void OnFilterTextChanged(string value) => ApplyFilter();
+    /// <summary>Typing in the search box filters once the typing pauses, not on every key (slow on phones).</summary>
+    private readonly Avalonia.Threading.DispatcherTimer _filterTimer;
+
+    partial void OnFilterTextChanged(string value)
+    {
+        _filterTimer.Stop();
+        _filterTimer.Start();
+    }
 
     private void ApplyFilter()
     {
+        _filterTimer.Stop();
         // Every word must match a field: nickname, Pokémon, types, moves, abilities, notes…
-        var f = FilterText;
+        var terms = SheetSearch.Terms(FilterText);
         var folder = SelectedFolder?.Path;
-        var matching = Sheets.Where(s => (!OnlyIssues || s.HasIssues) && SheetSearch.Matches(s.SearchIndex, f)
+        var matching = Sheets.Where(s => (!OnlyIssues || s.HasIssues) && SheetSearch.Matches(s.SearchIndex, terms)
                                          && (folder is null || SheetFolders.IsInside(SheetFolders.Normalize(s.Record.Folder), folder)));
         var byId = matching.ToDictionary(i => i.Id);
         var sorted = SheetSorting.Sort(byId.Values.Select(i => i.Record), SelectedSort.Key, SortDescending).Select(r => byId[r.Id]).ToList();
@@ -728,6 +738,7 @@ public sealed partial class SheetsViewModel : PageViewModel
             // Hidden by the search or the folder: show every sheet.
             FilterText = "";
             OnlyIssues = false;
+            ApplyFilter(); // now, not after the typing delay
             if (FilteredSheets.All(s => s.Id != id) && FolderOptions.Count > 0) SelectedFolder = FolderOptions[0];
             item = FilteredSheets.FirstOrDefault(s => s.Id == id);
         }

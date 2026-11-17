@@ -39,16 +39,21 @@ public sealed class TypeBadges : WrapPanel
         VerticalAlignment = VerticalAlignment.Center;
     }
 
+    private List<string> _shown = new();
+    private double _shownFontSize;
+
     private void Rebuild()
     {
+        var names = new List<string>();
+        if (Types != null)
+            foreach (var item in Types)
+                if (item?.ToString()?.Trim() is { Length: > 0 } text) names.Add(text);
+        // Rows reused for another item (sheet switch) often show the same types: keep the badges.
+        if (names.SequenceEqual(_shown) && BadgeFontSize == _shownFontSize && Children.Count == names.Count) return;
+        _shown = names;
+        _shownFontSize = BadgeFontSize;
         Children.Clear();
-        if (Types is null) return;
-        foreach (var item in Types)
-        {
-            var text = item?.ToString()?.Trim();
-            if (string.IsNullOrEmpty(text)) continue;
-            Children.Add(Make(text, TypeColors.ForType(text), BadgeFontSize));
-        }
+        foreach (var text in names) Children.Add(Make(text, TypeColors.ForType(text), BadgeFontSize));
     }
 
     internal static Border Make(string text, Color color, double fontSize) => new()

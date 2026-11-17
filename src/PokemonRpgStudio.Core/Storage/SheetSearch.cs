@@ -46,6 +46,11 @@ public static class SheetSearch
         return terms.Count == 0 || terms.All(index.Contains);
     }
 
+    /// <summary>Same as <see cref="Matches(string, string)"/> with the query already split by <see cref="Terms"/>
+    /// (filtering many sheets: the query is normalized once).</summary>
+    public static bool Matches(string index, IReadOnlyList<string> terms) =>
+        terms.Count == 0 || terms.All(index.Contains);
+
     public static IReadOnlyList<string> Terms(string query) =>
         Normalize(query).Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
 

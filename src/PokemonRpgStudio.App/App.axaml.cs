@@ -17,6 +17,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        if (PlatformInfo.IsMobile) PokemonRpgStudio.App.Controls.TouchTips.Install();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             try
