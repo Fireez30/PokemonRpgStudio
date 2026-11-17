@@ -1,0 +1,120 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.WhiteboardView"
+             x:DataType="vm:WhiteboardViewModel">
+  <UserControl.Styles>
+    <Style Selector="WrapPanel.toolbar > :is(Control)">
+      <Setter Property="Margin" Value="0,0,10,6" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ListBox.picker">
+      <Setter Property="Background" Value="{DynamicResource SubtleBackground}" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="2" />
+    </Style>
+    <Style Selector="ListBox.picker ListBoxItem">
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="MinWidth" Value="0" />
+    </Style>
+    <Style Selector="ListBox.picker ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
+    </Style>
+    <Style Selector="ListBox.picker ListBoxItem:selected TextBlock">
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="ListBox.picker ListBoxItem:selected Ellipse">
+      <Setter Property="Fill" Value="White" />
+    </Style>
+    <Style Selector="ListBox.colors ListBoxItem">
+      <Setter Property="Padding" Value="4" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+    <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="12,8,12,2">
+      <WrapPanel Classes="toolbar">
+        <ListBox Classes="picker" ItemsSource="{Binding Tools}" SelectedItem="{Binding SelectedTool}" SelectionMode="AlwaysSelected"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+          <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="1" /></ItemsPanelTemplate></ListBox.ItemsPanel>
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:BoardToolOption">
+              <TextBlock Text="{Binding Glyph}" FontSize="15" Width="18" TextAlignment="Center" ToolTip.Tip="{Binding Label}" />
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <ListBox Classes="picker colors" ItemsSource="{Binding Colors}" SelectedItem="{Binding SelectedColor}" SelectionMode="AlwaysSelected"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ToolTip.Tip="Colour (also changes the selected item)">
+          <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="1" /></ItemsPanelTemplate></ListBox.ItemsPanel>
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:BoardColorOption">
+              <Border Width="18" Height="18" CornerRadius="9" Background="{Binding Brush}" BorderBrush="#80808080" BorderThickness="1" />
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <ListBox Classes="picker" ItemsSource="{Binding Sizes}" SelectedItem="{Binding SelectedSize}" SelectionMode="AlwaysSelected"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+          <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="1" /></ItemsPanelTemplate></ListBox.ItemsPanel>
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:BoardSizeOption">
+              <Panel Width="18" Height="18" ToolTip.Tip="{Binding Label}" Background="Transparent">
+                <Ellipse Width="{Binding DotSize}" Height="{Binding DotSize}" Fill="{DynamicResource MutedText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Panel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <CheckBox Content="Fill" IsChecked="{Binding Filled}" ToolTip.Tip="Rectangles and ellipses get a see-through fill (areas, zones of effect…)" />
+        <CheckBox Content="Squares" IsChecked="{Binding ShowGrid}" ToolTip.Tip="Fine squares inside the cells (battle maps)" />
+
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Button Content="↶" Command="{Binding UndoCommand}" ToolTip.Tip="Undo (Ctrl+Z)" />
+          <Button Content="↷" Command="{Binding RedoCommand}" ToolTip.Tip="Redo (Ctrl+Y)" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Button Content="To front" Command="{Binding BringToFrontCommand}" ToolTip.Tip="Draw the selected item above the others" />
+          <Button Content="To back" Command="{Binding SendToBackCommand}" ToolTip.Tip="Draw the selected item below the others (maps, backgrounds)" />
+          <Button Content="Delete" Command="{Binding DeleteSelectedCommand}" ToolTip.Tip="Delete the selected item (Delete)" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <TextBlock Classes="muted" Text="Grid" VerticalAlignment="Center" />
+          <NumericUpDown Value="{Binding ColumnCount}" Minimum="1" Maximum="12" Increment="1" FormatString="0" Width="105"
+                         ToolTip.Tip="Columns" />
+          <TextBlock Classes="muted" Text="×" VerticalAlignment="Center" />
+          <NumericUpDown Value="{Binding RowCount}" Minimum="1" Maximum="12" Increment="1" FormatString="0" Width="105"
+                         ToolTip.Tip="Rows" />
+          <ComboBox ItemsSource="{Binding CellSizes}" SelectedItem="{Binding SelectedCellSize}" PlaceholderText="Cell size"
+                    ToolTip.Tip="Size of the square cells (what goes past the edge of a cell is hidden, not deleted)" />
+          <Button Content="Clear cell" Command="{Binding ClearCellCommand}" ToolTip.Tip="Remove everything from the current cell" />
+        </StackPanel>
+
+        <Button Content="🖼 Image…" Command="{Binding AddImageCommand}" ToolTip.Tip="Add an image file (map, character, item…) to the current cell" />
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <AutoCompleteBox Width="190" ItemsSource="{Binding PokemonNames}" SelectedItem="{Binding PokemonToAdd}" Text="{Binding PokemonToAdd}"
+                           FilterMode="ContainsOrdinal" MinimumPrefixLength="1" MaxDropDownHeight="400" Watermark="Pokémon token…" />
+          <Button Content="Add" Command="{Binding AddPokemonCommand}" ToolTip.Tip="Add the Pokémon's sprite as a token to the current cell" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Button Content="Fit" Command="{Binding FitViewCommand}" ToolTip.Tip="Zoom to show the whole grid" />
+          <Button Content="Export PNG" Command="{Binding ExportPngCommand}" />
+          <Button Classes="danger" Content="Clear" Command="{Binding ClearCommand}" />
+        </StackPanel>
+      </WrapPanel>
+    </Border>
+    <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,1,0,0" Padding="14,5">
+      <TextBlock Classes="muted" FontSize="12">
+        <Run Text="{Binding SelectedTool.Hint}" />
+        <Run Text=" · Wheel: zoom · Right / middle drag: pan · Saved automatically." />
+      </TextBlock>
+    </Border>
+    <c:WhiteboardCanvas />
+  </DockPanel>
+</UserControl>

@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.ShopViewerView"
+             x:DataType="vm:ShopViewerViewModel">
+  <UserControl.Styles>
+    <Style Selector="Border.article">
+      <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="12" />
+      <Setter Property="Margin" Value="0,0,12,12" />
+      <Setter Property="Width" Value="190" />
+    </Style>
+    <Style Selector="Border.article.soldout">
+      <Setter Property="Opacity" Value="0.5" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="260,*">
+    <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
+      <DockPanel Margin="14,20,14,14">
+        <TextBlock DockPanel.Dock="Top" Classes="page-title" Text="Shops" FontSize="22" />
+        <ListBox ItemsSource="{Binding Shops.Shops}" SelectedItem="{Binding Shops.SelectedShop}" Margin="0,10,0,0" Background="Transparent">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:ShopVm">
+              <StackPanel>
+                <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="muted" FontSize="11" Text="{Binding Summary}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <!-- No shop yet. -->
+    <StackPanel Grid.Column="1" IsVisible="{Binding !Shops.HasShop}" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12" MaxWidth="460">
+      <TextBlock Text="Shops" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
+      <TextBlock Classes="muted" TextAlignment="Center" Text="No shop yet. Create one, or import a .json file, in the edit view." />
+      <Button Classes="accent" Content="✏ Go to the edit view" Command="{Binding EditCommand}" HorizontalAlignment="Center" />
+    </StackPanel>
+
+    <DockPanel Grid.Column="1" IsVisible="{Binding Shops.HasShop}" Margin="24,20,12,0">
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,12,16">
+        <StackPanel>
+          <TextBlock Classes="page-title" Text="{Binding Shops.SelectedShop.DisplayName}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Classes="muted" Text="{Binding Shops.StockSummary}" />
+        </StackPanel>
+        <Button Grid.Column="1" Content="✏ Edit this shop" Command="{Binding EditCommand}" VerticalAlignment="Top" />
+      </Grid>
+
+      <TextBlock DockPanel.Dock="Top" Classes="muted" Text="This shop has no items yet." Margin="0,0,0,12"
+                 IsVisible="{Binding Shops.HasNoItems}" />
+
+      <ScrollViewer>
+        <ItemsControl ItemsSource="{Binding Shops.Items}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:ShopItemVm">
+              <Border Classes="article" Classes.soldout="{Binding IsSoldOut}">
+                <StackPanel Spacing="6">
+                  <Border Classes="subtle" Height="120" Padding="6">
+                    <Panel>
+                      <Image Source="{Binding PicturePath, Converter={x:Static c:PathImageConverter.Instance}}" Stretch="Uniform"
+                             IsVisible="{Binding HasPicture}" />
+                      <TextBlock Text="🛍" FontSize="40" Opacity="0.35" IsVisible="{Binding !HasPicture}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Panel>
+                  </Border>
+                  <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{Binding PriceText}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentText}" />
+                    <TextBlock Grid.Column="1" Classes="muted" FontSize="12" Text="{Binding StockText}" VerticalAlignment="Center" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </DockPanel>
+  </Grid>
+</UserControl>

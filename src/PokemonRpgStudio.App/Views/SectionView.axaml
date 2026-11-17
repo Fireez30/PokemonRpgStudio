@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             x:Class="PokemonRpgStudio.App.Views.SectionView"
+             x:DataType="vm:SectionViewModel">
+  <UserControl.Styles>
+    <Style Selector="ListBox.switch">
+      <Setter Property="Background" Value="{DynamicResource SubtleBackground}" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="3" />
+    </Style>
+    <Style Selector="ListBox.switch ListBoxItem">
+      <Setter Property="Padding" Value="14,6" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="ListBox.switch ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
+    </Style>
+    <Style Selector="ListBox.switch ListBoxItem:selected TextBlock">
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+    <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="14,8">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center" />
+        <ListBox Classes="switch" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" SelectionMode="AlwaysSelected"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+          <ListBox.ItemsPanel>
+            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="2" /></ItemsPanelTemplate>
+          </ListBox.ItemsPanel>
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:SectionTab">
+              <StackPanel Orientation="Horizontal" Spacing="8" ToolTip.Tip="{Binding ToolTip}">
+                <TextBlock Text="{Binding Glyph}" />
+                <TextBlock Text="{Binding Label}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </StackPanel>
+    </Border>
+    <ContentControl Content="{Binding CurrentView}" />
+  </DockPanel>
+</UserControl>

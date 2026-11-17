@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             x:Class="PokemonRpgStudio.App.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="28,24" MaxWidth="900" HorizontalAlignment="Left">
+      <TextBlock Classes="page-title" Text="Settings" />
+      <TextBlock Classes="page-subtitle" Text="Appearance, exports, data and import from the FaeresDev website." />
+
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Classes="section-title" Text="Appearance" />
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock Classes="label" Text="Theme" Width="160" />
+            <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" Width="160" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Classes="section-title" Text="Exports" />
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock Classes="label" Text="Image base URL" Width="160" />
+            <TextBox Text="{Binding ImageBaseUrl}" Width="360" />
+          </StackPanel>
+          <TextBlock Classes="muted" Text="Markdown / Google Doc exports reference the sprite at &lt;base URL&gt;/images/&lt;pokemon&gt;.png (the website by default)." />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="section-title" Text="Game data" />
+          <TextBlock Classes="muted" Text="{Binding DataStatus}" />
+          <ItemsControl ItemsSource="{Binding DataFiles}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:DataFileRow">
+                <Grid ColumnDefinitions="120,170,*" Margin="0,2">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                  <TextBlock Grid.Column="1" Text="{Binding Info}" Classes="muted" FontSize="12" VerticalAlignment="Center" />
+                  <SelectableTextBlock Grid.Column="2" Text="{Binding Path}" TextWrapping="Wrap" FontSize="12" Margin="8,0,0,0" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Classes="muted" TextWrapping="Wrap"
+                     Text="These three files (and the sprites below) are normal files in your data folder — they are not part of the application, so you can replace or edit them at any time (then click Reload data), or install newer ones below. Application updates never touch them. Sheets only store move and ability names, so they always show the current data." />
+          <WrapPanel>
+            <Button Classes="accent" Content="Install updated data files…" Command="{Binding InstallDataFilesCommand}" Margin="0,0,8,6" />
+            <Button Content="Reload data" Command="{Binding ReloadDataCommand}" Margin="0,0,8,6" ToolTip.Tip="Read the files again after replacing or editing them" />
+            <Button Content="Open data folder" Command="{Binding OpenDataFolderCommand}" Margin="0,0,8,6" />
+            <Button Content="Restore default data" Command="{Binding ResetPokedexEditsCommand}" Margin="0,0,8,6" IsVisible="{Binding HasDefaultData}"
+                    ToolTip.Tip="Replace the three files with the defaults shipped with the application" />
+          </WrapPanel>
+          <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto">
+            <TextBlock Classes="label" Text="Your data folder" />
+            <SelectableTextBlock Grid.Column="1" Text="{Binding UserDataFolder}" TextWrapping="Wrap" />
+          </Grid>
+
+          <TextBlock Text="Sprites" FontWeight="SemiBold" Margin="0,8,0,0" />
+          <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto">
+            <TextBlock Classes="label" Text="Sprites folder" />
+            <SelectableTextBlock Grid.Column="1" Text="{Binding ImagesFolder}" TextWrapping="Wrap" />
+            <TextBlock Grid.Row="1" Classes="label" Text="Content" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SpritesInfo}" Classes="muted" />
+          </Grid>
+          <TextBlock Classes="muted" TextWrapping="Wrap"
+                     Text="Sprites are normal image files too (png, jpg, webp), named like the website: charizard.png, charizard_mega.png, nidoran_(f).png… Add or replace files in this folder (then Reload data), or use the button below." />
+          <WrapPanel>
+            <Button Content="Add / replace sprites…" Command="{Binding InstallSpritesCommand}" Margin="0,0,8,6" />
+            <Button Content="Open sprites folder" Command="{Binding OpenSpritesFolderCommand}" Margin="0,0,8,6" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="section-title" Text="Your files" />
+          <SelectableTextBlock Text="{Binding UserFolder}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" Text="Sheets, teams and zones are stored as one JSON file each (sheets/, teams/, zones/). Set POKEMON_RPG_STUDIO_HOME to use another folder." />
+          <WrapPanel>
+            <Button Content="Open my files folder" Command="{Binding OpenUserFolderCommand}" Margin="0,0,8,0" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="section-title" Text="Import from the website" />
+          <TextBlock Classes="muted" Text="Pick the website's server/ folder to import every sheet (pokemon_cards/), team (teams/) and zone (zones/). You can also pick individual files: JSON sheets / teams / zones (including zones saved with the Encounter Generator's 'Save JSON' button) and the Markdown sheets made by the website's 'Generate Markdown' button. Ids are kept, so imported teams still point to their sheets." />
+          <WrapPanel>
+            <Button Classes="accent" Content="Import a folder…" Command="{Binding ImportWebsiteFolderCommand}" Margin="0,0,8,0" />
+            <Button Content="Import files…" Command="{Binding ImportWebsiteFilesCommand}" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <TextBlock Classes="muted" Text="{Binding Version, StringFormat='Pokémon RPG Studio {0} — by Faeres'}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,151 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             x:Class="PokemonRpgStudio.App.Views.DiceView"
+             x:DataType="vm:DiceViewModel">
+  <UserControl.Styles>
+    <Style Selector="Border.badge">
+      <Setter Property="Background" Value="{DynamicResource SubtleBackground}" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="MinWidth" Value="40" />
+      <Setter Property="Padding" Value="6,4" />
+      <Setter Property="Margin" Value="0,0,6,6" />
+    </Style>
+    <Style Selector="Border.badge.hit"><Setter Property="Background" Value="#2e8b3d" /></Style>
+    <Style Selector="Border.badge.shiny"><Setter Property="Background" Value="#c9a227" /></Style>
+    <Style Selector="Border.badge.platinum"><Setter Property="Background" Value="#3aa7d6" /></Style>
+    <Style Selector="TextBlock.big">
+      <Setter Property="FontSize" Value="22" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+  </UserControl.Styles>
+
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="vm:RollBadge">
+      <Border Classes="badge" Classes.hit="{Binding IsHit}" Classes.shiny="{Binding IsShiny}" Classes.platinum="{Binding IsPlatinum}">
+        <TextBlock Text="{Binding Value}" HorizontalAlignment="Center" FontWeight="SemiBold" />
+      </Border>
+    </DataTemplate>
+  </UserControl.DataTemplates>
+
+  <ScrollViewer>
+    <StackPanel Margin="28,24" MaxWidth="1200">
+      <TextBlock Classes="page-title" Text="Dice Rolls" />
+      <TextBlock Classes="page-subtitle" Text="Dice rolls for encounters, captures, shiny pulls, card drops and free expressions. Your shiny number, card numbers and Dexnav values are remembered." />
+
+      <Grid ColumnDefinitions="*,12,*">
+        <Border Classes="card">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="section-title" Text="Encounter rolls" />
+            <TextBlock Classes="muted" Text="Encounter bracket (d100) and encounter count (d20)." />
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+              <TextBlock Classes="label" Text="Encounter bracket" />
+              <TextBlock Grid.Column="1" Classes="big" Text="{Binding EncounterBracket}" />
+              <TextBlock Grid.Row="1" Classes="label" Text="Encounter count" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Classes="big" Text="{Binding EncounterCount}" />
+            </Grid>
+            <Button Classes="accent" Content="Roll" Command="{Binding RollEncounterCommand}" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Classes="card">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="section-title" Text="Capture rolls" />
+            <TextBlock Classes="muted" Text="Capture accuracy (d20) and capture rate (d100)." />
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+              <TextBlock Classes="label" Text="Capture accuracy" />
+              <TextBlock Grid.Column="1" Classes="big" Text="{Binding CaptureAccuracy}" />
+              <TextBlock Grid.Row="1" Classes="label" Text="Capture rate" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Classes="big" Text="{Binding CaptureRate}" />
+            </Grid>
+            <Button Classes="accent" Content="Roll" Command="{Binding RollCaptureCommand}" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="section-title" Text="Expression roller" />
+          <TextBlock Classes="muted" Text="Formulas like 2d6+1d8+3, (1d20+5)*2. Press Enter to roll." />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBox Width="280" Text="{Binding Expression}" Watermark="2d6+1d8+4">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Enter" Command="{Binding RollExpressionCommand}" />
+              </TextBox.KeyBindings>
+            </TextBox>
+            <Button Classes="accent" Content="Roll" Command="{Binding RollExpressionCommand}" />
+          </StackPanel>
+          <TextBlock Classes="big" Text="{Binding ExpressionResult}" />
+          <SelectableTextBlock Text="{Binding ExpressionDetails}" FontFamily="monospace" />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="section-title" Text="Shiny rolls" />
+          <TextBlock Classes="muted" Text="One d100 per Pokémon. Results at or under the Dexnav value are rerolled, except your shiny number." />
+          <WrapPanel>
+            <StackPanel Margin="0,0,16,8" Spacing="4">
+              <TextBlock Classes="label" Text="Your shiny number" />
+              <NumericUpDown Minimum="1" Maximum="100" Value="{Binding ShinyNumber}" Width="140" FormatString="0" />
+            </StackPanel>
+            <StackPanel Margin="0,0,16,8" Spacing="4">
+              <TextBlock Classes="label" Text="Dexnav" />
+              <NumericUpDown Minimum="0" Maximum="90" Value="{Binding ShinyDexnav}" Width="140" FormatString="0" />
+            </StackPanel>
+            <StackPanel Margin="0,0,16,8" Spacing="4">
+              <TextBlock Classes="label" Text="Number of rolls" />
+              <NumericUpDown Minimum="1" Maximum="500" Value="{Binding ShinyCount}" Width="140" FormatString="0" />
+            </StackPanel>
+            <Button Classes="accent" Content="Roll" Command="{Binding RollShinyCommand}" VerticalAlignment="Bottom" Margin="0,0,0,8" />
+          </WrapPanel>
+          <ItemsControl ItemsSource="{Binding ShinyResults}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+          </ItemsControl>
+          <StackPanel Orientation="Horizontal" Spacing="16">
+            <StackPanel Orientation="Horizontal" Spacing="4"><Border Classes="badge hit" MinWidth="14" Padding="0" Height="14" /><TextBlock Classes="label" Text="Shiny hit" /></StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4"><Border Classes="badge platinum" MinWidth="14" Padding="0" Height="14" /><TextBlock Classes="label" Text="Bonus roll (100) after a hit" /></StackPanel>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="section-title" Text="Card rolls" />
+          <TextBlock Classes="muted" Text="Normal card numbers always count. Shiny numbers count for shiny/platine Pokémon, the platine number for platine Pokémon. The Dexnav window grows by one for each card number inside it." />
+          <WrapPanel>
+            <StackPanel Margin="0,0,12,8" Spacing="4"><TextBlock Classes="label" Text="Normal #1" /><NumericUpDown Minimum="1" Maximum="100" Value="{Binding CardNormal1}" Width="120" FormatString="0" /></StackPanel>
+            <StackPanel Margin="0,0,12,8" Spacing="4"><TextBlock Classes="label" Text="Normal #2" /><NumericUpDown Minimum="1" Maximum="100" Value="{Binding CardNormal2}" Width="120" FormatString="0" /></StackPanel>
+            <StackPanel Margin="0,0,12,8" Spacing="4"><TextBlock Classes="label" Text="Normal #3" /><NumericUpDown Minimum="1" Maximum="100" Value="{Binding CardNormal3}" Width="120" FormatString="0" /></StackPanel>
+            <StackPanel Margin="0,0,12,8" Spacing="4"><TextBlock Classes="label" Text="Shiny #1" /><NumericUpDown Minimum="1" Maximum="100" Value="{Binding CardShiny1}" Width="120" FormatString="0" /></StackPanel>
+            <StackPanel Margin="0,0,12,8" Spacing="4"><TextBlock Classes="label" Text="Shiny #2" /><NumericUpDown Minimum="1" Maximum="100" Value="{Binding CardShiny2}" Width="120" FormatString="0" /></StackPanel>
+            <StackPanel Margin="0,0,12,8" Spacing="4"><TextBlock Classes="label" Text="Platine" /><NumericUpDown Minimum="1" Maximum="100" Value="{Binding CardPlatine1}" Width="120" FormatString="0" /></StackPanel>
+            <StackPanel Margin="0,0,12,8" Spacing="4"><TextBlock Classes="label" Text="Card Dexnav" /><NumericUpDown Minimum="0" Maximum="90" Value="{Binding CardDexnav}" Width="120" FormatString="0" /></StackPanel>
+            <StackPanel Margin="0,0,12,8" Spacing="4"><TextBlock Classes="label" Text="Number of rolls" /><NumericUpDown Minimum="1" Maximum="500" Value="{Binding CardCount}" Width="120" FormatString="0" /></StackPanel>
+          </WrapPanel>
+          <StackPanel Orientation="Horizontal" Spacing="16">
+            <Button Classes="accent" Content="Roll" Command="{Binding RollCardsCommand}" />
+            <CheckBox Content="Caught Pokémon is shiny" IsChecked="{Binding CaughtIsShiny}" />
+            <CheckBox Content="Caught Pokémon is platine" IsChecked="{Binding CaughtIsPlatine}" />
+          </StackPanel>
+          <ItemsControl ItemsSource="{Binding CardResults}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:RollTierGroup">
+                <StackPanel Margin="0,6,0,0">
+                  <TextBlock Classes="label" Text="{Binding Title}" Margin="0,0,0,4" />
+                  <ItemsControl ItemsSource="{Binding Rolls}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <StackPanel Orientation="Horizontal" Spacing="16">
+            <StackPanel Orientation="Horizontal" Spacing="4"><Border Classes="badge hit" MinWidth="14" Padding="0" Height="14" /><TextBlock Classes="label" Text="Normal card" /></StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4"><Border Classes="badge shiny" MinWidth="14" Padding="0" Height="14" /><TextBlock Classes="label" Text="Shiny card" /></StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4"><Border Classes="badge platinum" MinWidth="14" Padding="0" Height="14" /><TextBlock Classes="label" Text="Platine card" /></StackPanel>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,410 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.SheetEditorView"
+             x:DataType="vm:SheetEditorViewModel">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.buffed"><Setter Property="Foreground" Value="{DynamicResource GoodText}" /><Setter Property="FontWeight" Value="SemiBold" /></Style>
+    <Style Selector="TextBlock.lowered"><Setter Property="Foreground" Value="{DynamicResource BadText}" /><Setter Property="FontWeight" Value="SemiBold" /></Style>
+  </UserControl.Styles>
+
+  <UserControl.DataTemplates>
+    <!-- One move in the editor tables (level-up / egg / tutor / TM) -->
+    <DataTemplate DataType="vm:MoveRowVm">
+      <StackPanel>
+      <Border Height="2" Background="{DynamicResource AccentText}" Opacity="0.6" Margin="0,6" IsVisible="{Binding StartsSecondGroup}"
+              ToolTip.Tip="Moves after this line go to the second move table" />
+      <Border Classes="row" Classes.locked="{Binding IsLocked}" Padding="0,4">
+        <Grid RowDefinitions="Auto,Auto">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150" />
+            <ColumnDefinition Width="90" />
+            <ColumnDefinition Width="36" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="mtype" />
+            <ColumnDefinition Width="76" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="mclass" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Classes="td" Text="{Binding Name}" FontWeight="SemiBold" />
+          <TextBlock Grid.Column="1" Classes="td" Text="{Binding Frequency}" FontSize="12" />
+          <TextBlock Grid.Column="2" Classes="td" Text="{Binding AC}" ToolTip.Tip="Accuracy check" />
+          <c:TypeBadges Grid.Column="3" Types="{Binding Types}" Margin="4,0" />
+          <TextBlock Grid.Column="4" Classes="td" Text="{Binding FinalRoll}" FontFamily="monospace" FontWeight="SemiBold" />
+          <c:ClassBadge Grid.Column="5" ClassName="{Binding Class}" Margin="4,0" VerticalAlignment="Center" />
+          <TextBlock Grid.Column="6" Classes="td" Text="{Binding Range}" FontSize="12" />
+          <StackPanel Grid.Column="7" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+            <TextBlock Classes="label" Text="DB +" Opacity="{Binding DbOpacity}" />
+            <Button Classes="small" Content="−1" Command="{Binding DecreaseDbCommand}" ToolTip.Tip="DB −1" />
+            <NumericUpDown IsEnabled="{Binding CanHaveDbBuff}" Value="{Binding DbBuff}" Minimum="0" Maximum="20" Width="64" FormatString="0" ShowButtonSpinner="False" HorizontalContentAlignment="Center"
+                           ToolTip.Tip="{Binding DbTip}" ToolTip.ShowOnDisabled="True" />
+            <Button Classes="small" Content="+1" Command="{Binding IncreaseDbCommand}" ToolTip.Tip="DB +1" />
+            <Button Classes="small" Content="{Binding LockLabel}" Command="{Binding ToggleLockCommand}" IsVisible="{Binding CanBeLocked}"
+                    ToolTip.Tip="Locked moves are forced onto the final sheet" />
+            <Button Classes="small" Content="✕" Command="{Binding RemoveCommand}" ToolTip.Tip="Remove" />
+          </StackPanel>
+          <TextBlock Grid.Row="1" Grid.ColumnSpan="8" Text="{Binding Effect}" FontSize="12" Classes="muted" Margin="4,0,4,2" TextWrapping="Wrap" />
+        </Grid>
+      </Border>
+      </StackPanel>
+    </DataTemplate>
+  </UserControl.DataTemplates>
+
+  <Panel>
+    <!-- ── Empty state ── -->
+    <StackPanel IsVisible="{Binding !IsEditing}" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12" MaxWidth="480">
+      <TextBlock Text="Sheet Editor" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
+      <TextBlock Classes="muted" TextAlignment="Center"
+                 Text="Build a character sheet for a Pokémon of your RPG: level, rarity, card, nature, abilities, level-up points and moves. To change an existing sheet, open it in the Sheets page and click Edit." />
+      <Button Classes="accent" Content="+ Create a new sheet" Command="{Binding NewBlankSheetCommand}" HorizontalAlignment="Center" />
+    </StackPanel>
+
+    <!-- ── Editor ── -->
+    <DockPanel IsVisible="{Binding IsEditing}">
+      <!-- toolbar -->
+      <Border DockPanel.Dock="Top" Padding="20,12" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1">
+        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+          <TextBlock Text="{Binding HeaderTitle}" FontSize="20" FontWeight="Bold" Margin="0,0,0,8" Grid.ColumnSpan="3" />
+          <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <TextBlock Classes="label" Text="Nickname" />
+            <TextBox Width="220" Text="{Binding Nickname}" Watermark="Required to save" />
+            <TextBlock Classes="label" Text="Status" />
+            <ComboBox Width="140" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding Status}" />
+            <CheckBox Content="Auto-save" IsChecked="{Binding AutoSave}" />
+            <TextBlock Classes="muted" Text="{Binding SaveStatus}" VerticalAlignment="Center" FontSize="12" />
+          </StackPanel>
+          <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+            <Button Content="Save" Command="{Binding SaveCommand}" ToolTip.Tip="Ctrl+S" />
+            <Button Classes="accent" Content="Done ✓" Command="{Binding DoneCommand}" ToolTip.Tip="Save and go back to the sheet" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <ScrollViewer>
+        <StackPanel Margin="20,16" Grid.IsSharedSizeScope="True">
+          <TextBlock Classes="bad" Text="{Binding SpeciesWarning}" IsVisible="{Binding SpeciesWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Margin="0,0,0,10" />
+
+          <Grid ColumnDefinitions="*,16,*">
+            <!-- ═══ Left: build ═══ -->
+            <StackPanel>
+              <Border Classes="card">
+                <StackPanel Spacing="10">
+                  <TextBlock Classes="section-title" Text="Pokémon" />
+                  <AutoCompleteBox ItemsSource="{Binding PokemonNames}" SelectedItem="{Binding PokemonName}" FilterMode="ContainsOrdinal"
+                                   MinimumPrefixLength="0" MaxDropDownHeight="420" Watermark="Search a Pokémon…" />
+                  <TextBlock Classes="muted" FontSize="12" Text="Changing the Pokémon restarts the sheet (nickname and notes are kept)." />
+                </StackPanel>
+              </Border>
+
+              <Border Classes="card" IsVisible="{Binding HasSpecies}">
+                <StackPanel Spacing="10">
+                  <TextBlock Classes="section-title" Text="Basics" />
+                  <WrapPanel>
+                    <StackPanel Margin="0,0,12,8" Spacing="4">
+                      <TextBlock Classes="label" Text="Level" />
+                      <NumericUpDown Value="{Binding Level}" Minimum="1" Maximum="150" Increment="1" Width="130" FormatString="0.##" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,12,8" Spacing="4">
+                      <TextBlock Classes="label" Text="Experience" />
+                      <NumericUpDown Value="{Binding Experience}" Minimum="0" Maximum="100" Increment="1" Width="130" FormatString="0"
+                                     ToolTip.Tip="Experience of the Pokémon, from 0 to 100" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,12,8" Spacing="4">
+                      <TextBlock Classes="label" Text="Rarity" />
+                      <ComboBox ItemsSource="{Binding RarityOptions}" SelectedItem="{Binding Rarity}" Width="130" PlaceholderText="Pick…" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,12,8" Spacing="4">
+                      <TextBlock Classes="label" Text="Card" />
+                      <ComboBox ItemsSource="{Binding CardOptions}" SelectedItem="{Binding Card}" Width="130" PlaceholderText="Pick…" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,12,8" Spacing="4">
+                      <TextBlock Classes="label" Text="Gender" />
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <ComboBox ItemsSource="{Binding GenderOptions}" SelectedItem="{Binding Gender}" Width="130" PlaceholderText="Pick…" />
+                        <Button Content="Roll" Command="{Binding RollGenderCommand}" ToolTip.Tip="Roll using the gender ratio (only when no gender is set)" />
+                      </StackPanel>
+                    </StackPanel>
+                  </WrapPanel>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="card" IsVisible="{Binding HasSpecies}">
+                <StackPanel Spacing="10">
+                  <TextBlock Classes="section-title" Text="Nature" />
+                  <WrapPanel>
+                    <StackPanel Margin="0,0,12,8" Spacing="4">
+                      <TextBlock Classes="label" Text="Buff" />
+                      <ComboBox ItemsSource="{Binding StatOptions}" SelectedItem="{Binding BuffedStat}" Width="120" PlaceholderText="Stat…" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,12,8" Spacing="4">
+                      <TextBlock Classes="label" Text="Debuff" />
+                      <ComboBox ItemsSource="{Binding StatOptions}" SelectedItem="{Binding LoweredStat}" Width="120" PlaceholderText="Stat…" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,12,8" Spacing="4" VerticalAlignment="Bottom">
+                      <Button Content="{Binding RemainingRolls, StringFormat='Roll ({0} left)'}" Command="{Binding RollNatureCommand}" />
+                    </StackPanel>
+                  </WrapPanel>
+                  <TextBlock Text="{Binding NatureText}" FontWeight="SemiBold" />
+                  <StackPanel Spacing="4" IsVisible="{Binding HasNatureRolls}">
+                    <TextBlock Classes="label" Text="Rolled natures — click one to use it" />
+                    <ItemsControl ItemsSource="{Binding NatureRolls}">
+                      <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:NatureRollVm">
+                          <ToggleButton Classes="chip" Content="{Binding Label}" IsChecked="{Binding IsCurrent, Mode=OneWay}"
+                                        Command="{Binding Pick}" ToolTip.Tip="Use this nature" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="card" IsVisible="{Binding HasSpecies}">
+                <StackPanel Spacing="8">
+                  <TextBlock Classes="section-title" Text="Abilities" />
+                  <TextBlock Classes="muted" FontSize="12" Text="{Binding LevelHint}" IsVisible="{Binding ShowAdvancedLevelHint}" />
+                  <ItemsControl ItemsSource="{Binding AbilityTiers}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:AbilityTierVm">
+                        <Grid ColumnDefinitions="100,*,Auto" Margin="0,0,0,6">
+                          <StackPanel VerticalAlignment="Top" Margin="0,6,0,0">
+                            <TextBlock Classes="label" Text="{Binding Label}" TextWrapping="Wrap" />
+                            <TextBlock Classes="muted" FontSize="11" Text="{Binding Note}" IsVisible="{Binding IsEarly}" TextWrapping="Wrap"
+                                       ToolTip.Tip="Below the usual level for this tier: allowed, the ability is taught early (tutor mechanic)" />
+                          </StackPanel>
+                          <ItemsControl Grid.Column="1" ItemsSource="{Binding Options}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate x:DataType="vm:AbilityOption">
+                                <ToggleButton Classes="chip" Content="{Binding Name}" IsChecked="{Binding IsSelected}" ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="200" />
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                          <Button Grid.Column="2" Classes="small" Content="Roll" Command="{Binding RollCommand}" VerticalAlignment="Top" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <!-- Extra abilities: any ability, outside the species' list -->
+                  <Grid ColumnDefinitions="100,*,Auto">
+                    <TextBlock Classes="label" Text="Extra" Margin="0,6,0,0" VerticalAlignment="Top"
+                               ToolTip.Tip="Abilities added by hand, on top of the ones this Pokémon normally has" />
+                    <StackPanel Grid.Column="1" Spacing="4">
+                      <ItemsControl ItemsSource="{Binding ExtraAbilities}" IsVisible="{Binding HasExtraAbilities}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:AbilityOption">
+                            <ToggleButton Classes="chip" Content="{Binding Name, StringFormat='{}{0}  ✕'}" IsChecked="{Binding IsSelected}"
+                                          ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="200" />
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                      <TextBlock Classes="muted" FontSize="12" Text="No extra ability." Margin="0,6,0,0" IsVisible="{Binding !HasExtraAbilities}" />
+                    </StackPanel>
+                    <Button Grid.Column="2" Classes="small" Content="Add…" Command="{Binding ToggleAbilityPickerCommand}" VerticalAlignment="Top"
+                            ToolTip.Tip="Add abilities this Pokémon doesn't normally have (several at once)" />
+                  </Grid>
+
+                  <Border Classes="subtle" Padding="10" IsVisible="{Binding IsAbilityPickerOpen}">
+                    <StackPanel Spacing="6">
+                      <TextBox Text="{Binding AbilitySearch}" Watermark="Search an ability… (tick several, then Add selected)" />
+                      <ScrollViewer MaxHeight="260">
+                      <ItemsControl ItemsSource="{Binding AbilityCandidates}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:AbilityPickVm">
+                            <CheckBox IsChecked="{Binding IsChecked}" ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="300">
+                              <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Summary}" Classes="muted" FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="420" />
+                              </StackPanel>
+                            </CheckBox>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                      </ScrollViewer>
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Content="{Binding AddCheckedAbilitiesText}" Command="{Binding AddCheckedAbilitiesCommand}" />
+                        <Button Classes="small" Content="Clear selection" Command="{Binding ClearCheckedAbilitiesCommand}" VerticalAlignment="Center" />
+                        <Button Classes="small" Content="{Binding AddTypedAbilityText}" Command="{Binding AddTypedAbilityCommand}" VerticalAlignment="Center"
+                                IsVisible="{Binding CanAddTypedAbility}" ToolTip.Tip="Not in abilities.json: add it as a homebrew ability (no effect text)" />
+                        <Button Classes="small" Content="Close" Command="{Binding ToggleAbilityPickerCommand}" VerticalAlignment="Center" />
+                      </StackPanel>
+                    </StackPanel>
+                  </Border>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="card" IsVisible="{Binding HasSpecies}">
+                <StackPanel Spacing="8">
+                  <TextBlock Classes="section-title" Text="Level-up points" />
+                  <TextBlock Text="{Binding AvailablePoints, StringFormat='Available points: {0}  (9 + level)'}" FontWeight="SemiBold" />
+                  <TextBlock IsVisible="{Binding IsOverstated}" Foreground="#E0A030" FontSize="12" TextWrapping="Wrap"
+                             Text="⚠ Overstated: more points spent than the level allows." />
+                  <Grid ColumnDefinitions="80,60,130,60,60" Margin="0,4,0,0">
+                    <TextBlock Classes="th" Text="Stat" />
+                    <TextBlock Grid.Column="1" Classes="th" Text="Base" />
+                    <TextBlock Grid.Column="2" Classes="th" Text="Points" />
+                    <TextBlock Grid.Column="3" Classes="th" Text="Buff" />
+                    <TextBlock Grid.Column="4" Classes="th" Text="Final" />
+                  </Grid>
+                  <ItemsControl ItemsSource="{Binding StatRows}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:StatRowVm">
+                        <Grid ColumnDefinitions="80,60,130,60,60" Margin="0,2">
+                          <TextBlock Classes="td" Text="{Binding Label}" Classes.buffed="{Binding IsBuffed}" Classes.lowered="{Binding IsLowered}" />
+                          <TextBlock Grid.Column="1" Classes="td" Text="{Binding Base}" />
+                          <NumericUpDown Grid.Column="2" Value="{Binding Points}" Minimum="0" FormatString="0" />
+                          <TextBlock Grid.Column="3" Classes="td" Text="{Binding Buff}" Classes.buffed="{Binding IsBuffed}" Classes.lowered="{Binding IsLowered}" />
+                          <TextBlock Grid.Column="4" Classes="td" Text="{Binding Final}" FontWeight="Bold" Classes.buffed="{Binding IsBuffed}" Classes.lowered="{Binding IsLowered}" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Content="Auto" Command="{Binding AutoPointsCommand}" ToolTip.Tip="Spend the remaining points proportionally to the base stats" />
+                    <Button Content="Reset" Command="{Binding ResetPointsCommand}" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+
+            <!-- ═══ Right: sheet preview ═══ -->
+            <StackPanel Grid.Column="2" IsVisible="{Binding HasSpecies}">
+              <Border Classes="card">
+                <StackPanel Spacing="12">
+                  <Grid ColumnDefinitions="Auto,*">
+                    <Border Classes="subtle" Width="120" Height="120" Margin="0,0,16,0">
+                      <Image Source="{Binding ImageName, Converter={x:Static c:PokemonImageConverter.Instance}}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="6">
+                      <TextBlock Text="{Binding Nickname}" FontSize="22" FontWeight="Bold" />
+                      <TextBlock Text="{Binding Species.DisplayName, FallbackValue=''}" Classes="muted" />
+                      <c:TypeBadges Types="{Binding Species.PokemonTypes, FallbackValue={x:Null}}" />
+                      <WrapPanel>
+                        <Border Classes="chip"><TextBlock Text="{Binding Level, StringFormat='Lv. {0}'}" FontWeight="Bold" /></Border>
+                        <Border Classes="chip"><TextBlock Text="{Binding Experience, StringFormat='XP {0} / 100'}" /></Border>
+                        <Border Classes="chip"><TextBlock Text="{Binding Rarity, StringFormat='Rarity: {0}', TargetNullValue='Rarity: —'}" /></Border>
+                        <Border Classes="chip"><TextBlock Text="{Binding Card, StringFormat='Card: {0}', TargetNullValue='Card: —'}" /></Border>
+                        <Border Classes="chip"><TextBlock Text="{Binding Gender, StringFormat='Gender: {0}', TargetNullValue='Gender: —'}" /></Border>
+                      </WrapPanel>
+                    </StackPanel>
+                  </Grid>
+
+                  <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto">
+                    <TextBlock Classes="label" Text="Hit points" />
+                    <TextBlock Grid.Row="1" Text="{Binding HitPoints}" FontSize="22" FontWeight="Bold" />
+                    <TextBlock Grid.Column="1" Classes="label" Text="Evades" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Evades}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    <TextBlock Grid.Column="2" Classes="label" Text="Tutor points" />
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding TutorPoints}" FontSize="22" FontWeight="Bold" />
+                  </Grid>
+                  <TextBlock Classes="muted" FontSize="11" Text="HP = level + (HP × 3) + 10 · Evade = stat / 10 · Final stats appear once every point is spent." />
+                </StackPanel>
+              </Border>
+
+              <Border Classes="card">
+                <StackPanel Spacing="8">
+                  <TextBlock Classes="section-title" Text="Tutor points" />
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Classes="small" Content="−" Command="{Binding RemoveTutorPointCommand}" ToolTip.Tip="Remove a tutor point (spent, lost…)" />
+                    <TextBlock Text="{Binding TutorPoints}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" MinWidth="28" TextAlignment="Center" />
+                    <Button Classes="small" Content="+" Command="{Binding AddTutorPointCommand}" ToolTip.Tip="Add a tutor point (reward, item…)" />
+                    <TextBlock Text="{Binding TutorPointsDetail}" Classes="muted" VerticalAlignment="Center" Margin="8,0,0,0" />
+                    <Button Classes="small" Content="Reset" Command="{Binding ResetTutorPointsCommand}" VerticalAlignment="Center"
+                            ToolTip.Tip="Back to the tutor points given by the level (removes every point added or removed by hand)" />
+                  </StackPanel>
+                  <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Text="One tutor point every 5 levels (0 before level 5). Use − / + to spend or add points." />
+                  <TextBlock Classes="label" Text="Tutor notes" />
+                  <TextBox Text="{Binding TutorNotes}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" MaxHeight="200"
+                           Watermark="What the tutor points were spent on, moves / abilities planned…" />
+                </StackPanel>
+              </Border>
+
+              <Border Classes="card">
+                <StackPanel Spacing="6">
+                  <TextBlock Classes="section-title" Text="Moves on the final sheet" />
+                  <TextBlock Classes="muted" FontSize="12" Text="{Binding MovesSummary}" />
+                  <ItemsControl ItemsSource="{Binding SheetMoves}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:SheetMovePreview">
+                        <StackPanel>
+                          <Border Height="1" Background="{DynamicResource AccentText}" Margin="0,6" IsVisible="{Binding StartsSecondTable}" />
+                          <Grid ColumnDefinitions="24,*,Auto,90,60">
+                            <TextBlock Classes="td" Text="{Binding Number}" Foreground="{DynamicResource MutedText}" />
+                            <TextBlock Grid.Column="1" Classes="td" Text="{Binding Move.Name}" FontWeight="SemiBold" ToolTip.Tip="{Binding Move.Effect}" />
+                            <TextBlock Grid.Column="2" Classes="td" Text="{Binding Types}" FontSize="12" />
+                            <TextBlock Grid.Column="3" Classes="td" Text="{Binding Move.Roll}" FontFamily="monospace" />
+                            <TextBlock Grid.Column="4" Classes="td" Text="{Binding Class}" FontSize="12" />
+                          </Grid>
+                        </StackPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="card">
+                <StackPanel Spacing="6">
+                  <TextBlock Classes="section-title" Text="Status" />
+                  <TextBlock Text="{Binding MissingText}" TextWrapping="Wrap" Classes.good="{Binding IsComplete}" Classes.muted="{Binding !IsComplete}" />
+                  <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                             Text="Exports, HP tracking and dice rolls are in the Sheets page (click Done)." />
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Grid>
+
+          <!-- ═══ Moves (full width) ═══ -->
+          <Border Classes="card" IsVisible="{Binding HasSpecies}">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="section-title" Text="Moves" />
+                <Button Grid.Column="1" Classes="small" Content="Unlock all" Command="{Binding UnlockAllCommand}" />
+              </Grid>
+              <TextBlock Classes="muted" FontSize="12"
+                         Text="Level-up moves go on the sheet in this order; a line separates the first 6 from the next ones. Egg, tutor and TM moves are listed in the notes; lock them to put them on the move table too. Rolls include STAB (+2 DB) and the DB buff; ATK (physical) or SP.ATK (special) is added when rolling damage." />
+
+              <TextBlock Text="Level-up moves" FontWeight="SemiBold" Margin="0,6,0,0" />
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ComboBox ItemsSource="{Binding LevelMoveOptions}" SelectedItem="{Binding SelectedLevelMove}" PlaceholderText="Level-up moves (later ones: tutor)…" MinWidth="360" MaxDropDownHeight="420" />
+                <Button Content="Add" Command="{Binding AddLevelMoveCommand}" />
+              </StackPanel>
+              <ItemsControl ItemsSource="{Binding ChosenMoveRows}" />
+
+              <TextBlock Text="Egg moves" FontWeight="SemiBold" Margin="0,10,0,0" />
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ComboBox ItemsSource="{Binding EggMoveOptions}" SelectedItem="{Binding SelectedEggMove}" PlaceholderText="Egg moves…" MinWidth="360" MaxDropDownHeight="420" />
+                <Button Content="Add" Command="{Binding AddEggMoveCommand}" />
+              </StackPanel>
+              <ItemsControl ItemsSource="{Binding EggMoveRows}" />
+
+              <TextBlock Text="Tutor moves" FontWeight="SemiBold" Margin="0,10,0,0" />
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ComboBox ItemsSource="{Binding TutorMoveOptions}" SelectedItem="{Binding SelectedTutorMove}" PlaceholderText="Tutor moves…" MinWidth="360" MaxDropDownHeight="420" />
+                <Button Content="Add" Command="{Binding AddTutorMoveCommand}" />
+              </StackPanel>
+              <ItemsControl ItemsSource="{Binding TutorMoveRows}" />
+
+              <TextBlock Text="TM moves" FontWeight="SemiBold" Margin="0,10,0,0" />
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ComboBox ItemsSource="{Binding TmMoveOptions}" SelectedItem="{Binding SelectedTmMove}" PlaceholderText="TM moves…" MinWidth="360" MaxDropDownHeight="420" />
+                <Button Content="Add" Command="{Binding AddTmMoveCommand}" />
+              </StackPanel>
+              <ItemsControl ItemsSource="{Binding TmMoveRows}" />
+            </StackPanel>
+          </Border>
+
+          <Border Classes="card" IsVisible="{Binding HasSpecies}">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="section-title" Text="Notes" />
+              <TextBox Text="{Binding Notes}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90" Watermark="Free notes about this Pokémon (added at the end of the exported sheet)…" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </DockPanel>
+  </Panel>
+</UserControl>

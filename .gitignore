@@ -1,0 +1,13 @@
+bin/
+obj/
+dist/
+tools/
+*.AppImage
+*.user
+.vs/
+.idea/
+sheets_to_import/
+
+# Game data and sprites: local links to the website repository (not redistributed)
+pokemon_data
+pokemon_images

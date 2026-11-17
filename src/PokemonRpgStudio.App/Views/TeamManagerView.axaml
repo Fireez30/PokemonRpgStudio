@@ -1,0 +1,136 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:m="using:PokemonRpgStudio.Core.Models"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.TeamManagerView"
+             x:DataType="vm:TeamManagerViewModel">
+  <UserControl.Styles>
+    <!-- Pokémon picture / name of a slot: click to open its sheet. -->
+    <Style Selector="Button.slotlink">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.slotlink:disabled">
+      <Setter Property="Cursor" Value="Arrow" />
+    </Style>
+    <Style Selector="Button.slotlink:disabled /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.slotlink:pointerover TextBlock">
+      <Setter Property="TextDecorations" Value="Underline" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="260,*">
+    <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
+      <DockPanel Margin="14,20,14,14">
+        <StackPanel DockPanel.Dock="Top" Spacing="8">
+          <TextBlock Classes="page-title" Text="Teams" FontSize="22" />
+          <Button Classes="accent" Content="+ New team" Command="{Binding NewTeamCommand}" />
+          <Button Content="🖼 Card for any team…" Command="{Binding OpenTeamCardCommand}"
+                  ToolTip.Tip="Team Card: build a card for any team (rivals, NPCs…) without saving anything" />
+        </StackPanel>
+        <ListBox ItemsSource="{Binding Teams}" SelectedItem="{Binding SelectedTeam}" Margin="0,10,0,0" Background="Transparent">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="m:TeamRecord">
+              <TextBlock Text="{Binding DisplayName}" />
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <StackPanel Grid.Column="1" IsVisible="{Binding !IsEditing}" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12" MaxWidth="460">
+      <TextBlock Text="Team Manager" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
+      <TextBlock Classes="muted" TextAlignment="Center" Text="Group up to six of your saved sheets into a team and export it as a PNG card. Pick a team on the left or create one." />
+      <Button Classes="accent" Content="+ Create a team" Command="{Binding NewTeamCommand}" HorizontalAlignment="Center" />
+      <TextBlock Classes="muted" TextAlignment="Center" Text="Need a card for a rival or an NPC team that isn't made of your sheets?" Margin="0,8,0,0" />
+      <Button Content="🖼 Open the Team Card" Command="{Binding OpenTeamCardCommand}" HorizontalAlignment="Center" />
+    </StackPanel>
+
+    <ScrollViewer Grid.Column="1" IsVisible="{Binding IsEditing}">
+      <StackPanel Margin="24,20">
+        <Border Classes="card">
+          <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="Auto,280,Auto,*">
+              <TextBlock Classes="label" Text="Team name" Margin="0,0,10,0" />
+              <TextBox Grid.Column="1" Text="{Binding TeamName}" Watermark="Required to save" />
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="10,0">
+                <TextBlock Classes="label" Text="Theme" />
+                <ComboBox ItemsSource="{Binding ThemeTypes}" SelectedItem="{Binding ThemeType}" MinWidth="140" />
+                <Button Classes="accent" Content="Save" Command="{Binding SaveCommand}" />
+                <Button Classes="danger" Content="Delete" Command="{Binding DeleteCommand}" IsVisible="{Binding IsSaved}" />
+              </StackPanel>
+              <TextBlock Grid.Column="3" Classes="muted" FontSize="12" Text="{Binding SaveStatus}" VerticalAlignment="Center" />
+            </Grid>
+            <TextBlock Classes="muted" FontSize="12" Text="{Binding SlotsSummary}" />
+          </StackPanel>
+        </Border>
+
+        <Grid ColumnDefinitions="*,16,*">
+          <ItemsControl ItemsSource="{Binding Slots}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ManagedSlotVm">
+                <Border Classes="card" Padding="12">
+                  <Grid ColumnDefinitions="40,72,*">
+                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource AccentText}" />
+                    <Button Grid.Column="1" Classes="slotlink" VerticalAlignment="Top" Command="{Binding OpenSheetCommand}" ToolTip.Tip="{Binding OpenTip}">
+                      <Image Width="64" Height="64"
+                             Source="{Binding PokemonName, Converter={x:Static c:PokemonImageConverter.Instance}, ConverterParameter=128}" />
+                    </Button>
+                    <StackPanel Grid.Column="2" Spacing="6">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <ComboBox ItemsSource="{Binding SheetOptions}" SelectedItem="{Binding SelectedSheet}" PlaceholderText="Choose a sheet…"
+                                  HorizontalAlignment="Stretch" MaxDropDownHeight="400">
+                          <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="m:SheetRecord">
+                              <TextBlock Text="{Binding DisplayName}" />
+                            </DataTemplate>
+                          </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Grid.Column="1" Classes="small" Content="Clear" Command="{Binding ClearCommand}" Margin="6,0,0,0" />
+                      </Grid>
+                      <Grid ColumnDefinitions="*,Auto">
+                        <Button Classes="slotlink" Command="{Binding OpenSheetCommand}" ToolTip.Tip="{Binding OpenTip}">
+                          <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                        </Button>
+                        <Button Grid.Column="1" Classes="small" Content="Open sheet" Command="{Binding OpenSheetCommand}"
+                                IsVisible="{Binding CanOpenSheet}" Margin="6,0,0,0" />
+                      </Grid>
+                      <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding HasSlot}">
+                        <TextBlock Classes="muted" Text="{Binding Meta}" VerticalAlignment="Center" />
+                        <CheckBox Content="Mega" IsChecked="{Binding IsMega}" />
+                      </StackPanel>
+                      <TextBlock Classes="bad" FontSize="12" Text="The linked sheet no longer exists." IsVisible="{Binding IsMissingSheet}" />
+                    </StackPanel>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <Border Grid.Column="2" Classes="card" VerticalAlignment="Top">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="section-title" Text="PNG card" />
+                <Button Grid.Column="1" Classes="accent" Content="Export PNG…" Command="{Binding ExportPngCommand}" />
+              </Grid>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Classes="label" Text="Trainer image" />
+                <Button Content="Choose…" Command="{Binding PickTrainerImageCommand}" />
+                <Button Content="Remove" Command="{Binding ClearTrainerImageCommand}" />
+              </StackPanel>
+              <TextBlock Classes="muted" FontSize="12" Text="{Binding PreviewStatus}" />
+              <Image Source="{Binding Preview}" Stretch="Uniform" />
+            </StackPanel>
+          </Border>
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

@@ -1,0 +1,163 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             xmlns:m="using:PokemonRpgStudio.Core.Models"
+             x:Class="PokemonRpgStudio.App.Views.EncounterView"
+             x:DataType="vm:EncounterViewModel">
+  <UserControl.Styles>
+    <Style Selector="Border.mon">
+      <Setter Property="Background" Value="{DynamicResource SubtleBackground}" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="6" />
+      <Setter Property="Margin" Value="0,0,8,8" />
+      <Setter Property="Width" Value="116" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.mon.rolled">
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+      <Setter Property="Background" Value="{DynamicResource HighlightBackground}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="260,*">
+    <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
+      <DockPanel Margin="14,20,14,14">
+        <StackPanel DockPanel.Dock="Top" Spacing="8">
+          <TextBlock Classes="page-title" Text="Zones" FontSize="22" />
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Classes="accent" Content="+ New zone" Command="{Binding NewZoneCommand}" />
+            <Button Content="Import…" Command="{Binding ImportJsonCommand}" ToolTip.Tip="Import a zone (.json) into the folder shown" />
+          </StackPanel>
+          <Grid ColumnDefinitions="*,Auto,Auto">
+            <ComboBox ItemsSource="{Binding FolderOptions}" SelectedItem="{Binding SelectedFolder}" HorizontalAlignment="Stretch"
+                      MaxDropDownHeight="420" ToolTip.Tip="Folder shown in the list (zones of subfolders are included)">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:FolderOption">
+                  <StackPanel Orientation="Horizontal" Spacing="6" Margin="{Binding Indent}">
+                    <TextBlock Text="{Binding Glyph}" />
+                    <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Column="1" Content="＋📁" Command="{Binding NewFolderCommand}" Margin="6,0,0,0"
+                    ToolTip.Tip="New folder (inside the folder shown)" />
+            <Button Grid.Column="2" Content="⋯" Margin="6,0,0,0" MinWidth="32" IsEnabled="{Binding HasFolderSelected}"
+                    ToolTip.Tip="Rename or delete the folder shown">
+              <Button.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                  <MenuItem Header="Rename folder…" Command="{Binding RenameFolderCommand}" />
+                  <MenuItem Header="Delete folder (keeps its zones)…" Command="{Binding DeleteFolderCommand}" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+          </Grid>
+        </StackPanel>
+        <ListBox ItemsSource="{Binding Zones}" SelectedItem="{Binding SelectedZone}" Margin="0,10,0,0" Background="Transparent">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="m:ZoneRecord">
+              <StackPanel>
+                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding Folder, StringFormat='📁 {0}'}" Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding Folder, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <ScrollViewer Grid.Column="1">
+      <StackPanel Margin="24,20">
+        <TextBlock Classes="page-title" Text="Encounter Generator" />
+        <TextBlock Classes="page-subtitle" Text="Build zones with Common / Uncommon / Rare / Super Rare Pokémon, roll which Pokémon appears, and roll the number of encounters." />
+
+        <Border Classes="card">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="section-title" Text="Encounter rules" />
+            <TextBlock Classes="muted" FontSize="12" Text="0 → none · 1-5 → 2 · 6-10 → 4+1d4 · 11-15 → 6+1d6 · 16-17 → 8+2d6 · 18-19 → 10+2d8 · 20 → outbreak (d100 table)" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Classes="label" Text="Value (0-20)" />
+              <NumericUpDown Value="{Binding EncounterValue}" Minimum="0" Maximum="20" Width="130" FormatString="0" />
+              <Button Classes="accent" Content="Roll" Command="{Binding RollEncountersCommand}" />
+              <Button Content="Roll d20 + rules" Command="{Binding RollValueCommand}" />
+            </StackPanel>
+            <TextBlock Text="{Binding EncounterLabel}" FontSize="22" FontWeight="Bold" />
+            <TextBlock Classes="muted" Text="{Binding EncounterDetail}" />
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card">
+          <Expander IsExpanded="{Binding IsEditorExpanded}" HorizontalAlignment="Stretch" Padding="0,8,0,0">
+            <Expander.Header>
+              <TextBlock Classes="section-title" Text="Zone editor" Margin="0" />
+            </Expander.Header>
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="Auto,320,Auto,Auto,*">
+                <TextBlock Classes="label" Text="Zone name" Margin="0,0,10,0" />
+                <TextBox Grid.Column="1" Text="{Binding ZoneName}" Watermark="Required to save" />
+                <ComboBox Grid.Column="2" ItemsSource="{Binding MoveFolderOptions}" SelectedItem="{Binding ZoneFolder}" MinWidth="150" MaxWidth="240"
+                          VerticalAlignment="Center" Margin="10,0,0,0" MaxDropDownHeight="420" ToolTip.Tip="Folder of this zone: pick one to move it">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:FolderOption">
+                      <StackPanel Orientation="Horizontal" Spacing="6" Margin="{Binding Indent}">
+                        <TextBlock Text="{Binding Glyph}" />
+                        <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" Margin="10,0">
+                  <Button Classes="accent" Content="Save" Command="{Binding SaveCommand}" />
+                  <Button Content="Export JSON…" Command="{Binding ExportJsonCommand}" />
+                  <Button Classes="danger" Content="Delete" Command="{Binding DeleteCommand}" IsVisible="{Binding IsSaved}" />
+                </StackPanel>
+                <TextBlock Grid.Column="4" Classes="muted" FontSize="12" Text="{Binding SaveStatus}" VerticalAlignment="Center" />
+              </Grid>
+
+              <ItemsControl ItemsSource="{Binding Sections}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ZoneSectionVm">
+                    <Border Classes="subtle" Margin="0,0,0,10" Padding="12">
+                      <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                          <TextBlock Text="{Binding Label}" FontWeight="Bold" FontSize="15" />
+                          <TextBlock Grid.Column="1" Classes="muted" Text="{Binding CountText}" Margin="10,0" FontSize="12" VerticalAlignment="Center" />
+                          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{Binding RolledText}" FontWeight="SemiBold" Foreground="{DynamicResource AccentText}" VerticalAlignment="Center" />
+                            <Button Content="Roll Pokémon" Command="{Binding RollCommand}" IsVisible="{Binding CanRoll}" />
+                          </StackPanel>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <AutoCompleteBox Width="300" ItemsSource="{Binding PokemonNames}" SelectedItem="{Binding PendingName}" Text="{Binding PendingName}"
+                                           FilterMode="ContainsOrdinal" MinimumPrefixLength="1" MaxDropDownHeight="360" Watermark="Add a Pokémon…" />
+                          <Button Content="Add" Command="{Binding AddCommand}" />
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding Pokemon}">
+                          <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ZonePokemonVm">
+                              <Border Classes="mon" Classes.rolled="{Binding IsRolled}">
+                                <Grid RowDefinitions="Auto,Auto">
+                                  <Image Width="80" Height="80" Source="{Binding Name, Converter={x:Static c:PokemonImageConverter.Instance}, ConverterParameter=160}" />
+                                  <Button Classes="small" Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Command="{Binding RemoveCommand}" Padding="5,0" />
+                                  <TextBlock Grid.Row="1" Text="{Binding Label}" TextAlignment="Center" TextWrapping="Wrap" FontSize="12" FontWeight="SemiBold" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Expander>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

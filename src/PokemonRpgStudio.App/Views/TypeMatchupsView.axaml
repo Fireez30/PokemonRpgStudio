@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.TypeMatchupsView"
+             x:DataType="vm:TypeMatchups">
+  <!-- Damage multipliers taken by the Pokémon (neutral ×1 types are left out). -->
+  <ItemsControl ItemsSource="{Binding Groups}">
+    <ItemsControl.ItemTemplate>
+      <DataTemplate x:DataType="vm:TypeMultiplierGroup">
+        <Grid ColumnDefinitions="56,*" Margin="0,2">
+          <Border Background="{Binding Multiplier, Converter={x:Static c:EffectivenessBrushConverter.Instance}}"
+                  CornerRadius="6" Padding="6,1" HorizontalAlignment="Left" VerticalAlignment="Center"
+                  ToolTip.Tip="{Binding Description}">
+            <TextBlock Text="{Binding Label}" FontWeight="Bold" FontSize="12" />
+          </Border>
+          <c:TypeBadges Grid.Column="1" Types="{Binding Types}" BadgeFontSize="11" VerticalAlignment="Center" />
+        </Grid>
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
+  </ItemsControl>
+</UserControl>

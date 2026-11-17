@@ -1,0 +1,122 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.ShopEditorView"
+             x:DataType="vm:ShopEditorViewModel">
+  <UserControl.Styles>
+    <!-- Picture of an item: click to choose one. -->
+    <Style Selector="Button.picture">
+      <Setter Property="Width" Value="52" />
+      <Setter Property="Height" Value="52" />
+      <Setter Property="Padding" Value="2" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Background" Value="{DynamicResource SubtleBackground}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="TextBox.missing">
+      <Setter Property="BorderBrush" Value="{DynamicResource BadText}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="260,*" DataContext="{Binding Shops}" x:DataType="vm:ShopsViewModel">
+    <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
+      <DockPanel Margin="14,20,14,14">
+        <StackPanel DockPanel.Dock="Top" Spacing="8">
+          <TextBlock Classes="page-title" Text="Shops" FontSize="22" />
+          <Button Classes="accent" Content="+ New shop" Command="{Binding NewShopCommand}" HorizontalAlignment="Stretch" />
+          <Grid ColumnDefinitions="*,6,*">
+            <Button Content="Import…" Command="{Binding ImportCommand}" HorizontalAlignment="Stretch"
+                    ToolTip.Tip="Add the shops of a .json file (exported from here, or hand-written)" />
+            <Button Grid.Column="2" Content="Export all…" Command="{Binding ExportAllCommand}" HorizontalAlignment="Stretch"
+                    ToolTip.Tip="Save every shop, pictures included, in one .json file" />
+          </Grid>
+        </StackPanel>
+        <ListBox ItemsSource="{Binding Shops}" SelectedItem="{Binding SelectedShop}" Margin="0,10,0,0" Background="Transparent">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:ShopVm">
+              <StackPanel>
+                <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="muted" FontSize="11" Text="{Binding Summary}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <StackPanel Grid.Column="1" IsVisible="{Binding !HasShop}" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12" MaxWidth="460">
+      <TextBlock Text="Shops" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
+      <TextBlock Classes="muted" TextAlignment="Center"
+                 Text="Keep the stock of your marts and merchants: every item has a name, a quantity and a price, and can have a picture. Shops are saved automatically and can be exported to or imported from JSON files." />
+      <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+        <Button Classes="accent" Content="+ Create a shop" Command="{Binding NewShopCommand}" />
+        <Button Content="Import…" Command="{Binding ImportCommand}" />
+      </StackPanel>
+    </StackPanel>
+
+    <DockPanel Grid.Column="1" IsVisible="{Binding HasShop}" Margin="24,20,24,12">
+      <Border DockPanel.Dock="Top" Classes="card">
+        <StackPanel Spacing="8">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Classes="label" Text="Shop name" Margin="0,0,10,0" />
+            <TextBox Grid.Column="1" Text="{Binding SelectedShop.Name}" Watermark="Name of the shop" MaxWidth="420" HorizontalAlignment="Stretch" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="10,0,0,0">
+              <Button Content="Export shop…" Command="{Binding ExportShopCommand}" ToolTip.Tip="Save this shop, pictures included, as a .json file" />
+              <Button Content="Duplicate" Command="{Binding DuplicateShopCommand}" />
+              <Button Classes="danger" Content="Delete" Command="{Binding DeleteShopCommand}" />
+            </StackPanel>
+          </Grid>
+          <TextBlock Classes="muted" FontSize="12" Text="{Binding StockSummary}" />
+        </StackPanel>
+      </Border>
+
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="60,*,130,150,Auto" Margin="16,0,16,4">
+        <TextBlock Classes="th" Text="Picture" />
+        <TextBlock Grid.Column="1" Classes="th" Text="Name" />
+        <TextBlock Grid.Column="2" Classes="th" Text="Quantity" />
+        <TextBlock Grid.Column="3" Classes="th" Text="Price" />
+      </Grid>
+
+      <Button DockPanel.Dock="Bottom" Classes="accent" Content="+ Add item" Command="{Binding AddItemCommand}" Margin="0,10,0,0" />
+
+      <ScrollViewer>
+        <ItemsControl ItemsSource="{Binding Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:ShopItemVm">
+              <Border Classes="card" Padding="12,8" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="60,*,130,150,Auto">
+                  <Panel VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <Button Classes="picture" Command="{Binding ChoosePictureCommand}" ToolTip.Tip="Choose a picture (optional)">
+                      <Panel>
+                        <Image Source="{Binding PicturePath, Converter={x:Static c:PathImageConverter.Instance}}" Stretch="Uniform"
+                               IsVisible="{Binding HasPicture}" />
+                        <TextBlock Text="🖼" FontSize="18" Opacity="0.5" IsVisible="{Binding !HasPicture}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Panel>
+                    </Button>
+                  </Panel>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0" Spacing="2">
+                    <TextBox Text="{Binding Name}" Watermark="Item name (required)" Classes.missing="{Binding IsNameMissing}" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <TextBlock Classes="bad" FontSize="11" Text="A name is required." IsVisible="{Binding IsNameMissing}" />
+                      <TextBlock Classes="muted" FontSize="11" Text="Sold out" IsVisible="{Binding IsSoldOut}" />
+                      <Button Classes="small" Content="Remove picture" Command="{Binding RemovePictureCommand}" IsVisible="{Binding HasPicture}" Padding="6,0" />
+                    </StackPanel>
+                  </StackPanel>
+                  <NumericUpDown Grid.Column="2" Value="{Binding Quantity}" Minimum="0" Increment="1" FormatString="0"
+                                 VerticalAlignment="Center" Margin="0,0,10,0" ToolTip.Tip="Quantity in stock" />
+                  <NumericUpDown Grid.Column="3" Value="{Binding Price}" Minimum="0" Increment="10" FormatString="#,0.##"
+                                 VerticalAlignment="Center" Margin="0,0,10,0" ToolTip.Tip="Price of one item" />
+                  <Button Grid.Column="4" Content="✕" Command="{Binding RemoveCommand}" VerticalAlignment="Center" ToolTip.Tip="Remove the item" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </DockPanel>
+  </Grid>
+</UserControl>

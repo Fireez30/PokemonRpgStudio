@@ -1,0 +1,133 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.SheetDatabaseView"
+             x:DataType="vm:SheetDatabaseViewModel">
+  <UserControl.Styles>
+    <Style Selector="Button.header">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="4,2" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedText}" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Button.header.active">
+      <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+    </Style>
+    <Style Selector="ListBox.table ListBoxItem">
+      <Setter Property="Padding" Value="4,4" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="TextBlock.td">
+      <Setter Property="TextWrapping" Value="NoWrap" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="TextBlock.hurt"><Setter Property="Foreground" Value="#d29922" /><Setter Property="FontWeight" Value="SemiBold" /></Style>
+    <Style Selector="TextBlock.fainted"><Setter Property="Foreground" Value="{DynamicResource BadText}" /><Setter Property="FontWeight" Value="Bold" /></Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="28,24,28,0">
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Classes="page-title" Text="Sheet database" />
+      <TextBlock Classes="page-subtitle" Text="Every saved sheet in one table. Filter the list, click a column title to sort by it (click again to reverse), double-click a row or click Open to play the sheet." />
+      <WrapPanel Margin="0,0,0,12">
+        <TextBox Width="260" Watermark="Search name, type, move, ability, notes…" Text="{Binding FilterText}" Margin="0,0,8,8" />
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,8">
+          <TextBlock Classes="label" Text="Folder" VerticalAlignment="Center" />
+          <ComboBox ItemsSource="{Binding FolderOptions}" SelectedItem="{Binding SelectedFolder}" MinWidth="150" MaxDropDownHeight="420">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:FolderOption">
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="{Binding Indent}">
+                  <TextBlock Text="{Binding Glyph}" />
+                  <TextBlock Text="{Binding Text}" />
+                </StackPanel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,8">
+          <TextBlock Classes="label" Text="Status" VerticalAlignment="Center" />
+          <ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding SelectedStatus}" MinWidth="110" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,8">
+          <TextBlock Classes="label" Text="Type" VerticalAlignment="Center" />
+          <ComboBox ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding SelectedType}" MinWidth="110" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,8">
+          <TextBlock Classes="label" Text="Rarity" VerticalAlignment="Center" />
+          <ComboBox ItemsSource="{Binding RarityOptions}" SelectedItem="{Binding SelectedRarity}" MinWidth="100" />
+        </StackPanel>
+        <CheckBox Content="⚠ Needs attention" IsChecked="{Binding OnlyIssues}" Margin="0,0,16,8"
+                  ToolTip.Tip="Sheets not finished or not correct (hover the ⚠ of a row to see why)" />
+        <CheckBox Content="Hurt only" IsChecked="{Binding OnlyHurt}" Margin="0,0,16,8" ToolTip.Tip="Sheets with missing HP or injuries" />
+        <Button Content="Clear filters" Command="{Binding ClearFiltersCommand}" Margin="0,0,0,8" />
+      </WrapPanel>
+    </StackPanel>
+
+    <TextBlock DockPanel.Dock="Bottom" Classes="muted" FontSize="11" Margin="4,6,0,10" Text="{Binding CountText}" />
+    <Panel>
+      <TextBlock Classes="muted" Text="No sheet yet: create one in the list view." IsVisible="{Binding HasNoSheets}" />
+      <TextBlock Classes="muted" Text="No sheet matches the filters." IsVisible="{Binding HasNoMatch}" Margin="4,40,0,0" />
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" IsVisible="{Binding !HasNoSheets}">
+        <DockPanel>
+          <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="4,0">
+            <Grid ColumnDefinitions="140,110,110,110,44,64,64,84,84,70,50,50,50,58,58,50,56,124,60">
+              <Button Grid.Column="0" Classes="header" Classes.active="{Binding NicknameHeader.IsActive}" Content="{Binding NicknameHeader.Text}" Command="{Binding NicknameHeader.Command}" />
+              <Button Grid.Column="1" Classes="header" Classes.active="{Binding FolderHeader.IsActive}" Content="{Binding FolderHeader.Text}" Command="{Binding FolderHeader.Command}" />
+              <Button Grid.Column="2" Classes="header" Classes.active="{Binding PokemonHeader.IsActive}" Content="{Binding PokemonHeader.Text}" Command="{Binding PokemonHeader.Command}" />
+              <Button Grid.Column="3" Classes="header" Classes.active="{Binding TypeHeader.IsActive}" Content="{Binding TypeHeader.Text}" Command="{Binding TypeHeader.Command}" />
+              <Button Grid.Column="4" Classes="header" Classes.active="{Binding LevelHeader.IsActive}" Content="{Binding LevelHeader.Text}" Command="{Binding LevelHeader.Command}" />
+              <Button Grid.Column="5" Classes="header" Classes.active="{Binding RarityHeader.IsActive}" Content="{Binding RarityHeader.Text}" Command="{Binding RarityHeader.Command}" />
+              <Button Grid.Column="6" Classes="header" Classes.active="{Binding CardHeader.IsActive}" Content="{Binding CardHeader.Text}" Command="{Binding CardHeader.Command}" />
+              <Button Grid.Column="7" Classes="header" Classes.active="{Binding StatusHeader.IsActive}" Content="{Binding StatusHeader.Text}" Command="{Binding StatusHeader.Command}" ToolTip.Tip="Roster status" />
+              <Button Grid.Column="8" Classes="header" Classes.active="{Binding NatureHeader.IsActive}" Content="{Binding NatureHeader.Text}" Command="{Binding NatureHeader.Command}" />
+              <Button Grid.Column="9" Classes="header" Classes.active="{Binding HpHeader.IsActive}" Content="{Binding HpHeader.Text}" Command="{Binding HpHeader.Command}" ToolTip.Tip="Current HP / max HP (injuries applied)" />
+              <Button Grid.Column="10" Classes="header" Classes.active="{Binding StatHpHeader.IsActive}" Content="{Binding StatHpHeader.Text}" Command="{Binding StatHpHeader.Command}" ToolTip.Tip="Final HP stat" />
+              <Button Grid.Column="11" Classes="header" Classes.active="{Binding AtkHeader.IsActive}" Content="{Binding AtkHeader.Text}" Command="{Binding AtkHeader.Command}" />
+              <Button Grid.Column="12" Classes="header" Classes.active="{Binding DefHeader.IsActive}" Content="{Binding DefHeader.Text}" Command="{Binding DefHeader.Command}" />
+              <Button Grid.Column="13" Classes="header" Classes.active="{Binding SpAtkHeader.IsActive}" Content="{Binding SpAtkHeader.Text}" Command="{Binding SpAtkHeader.Command}" />
+              <Button Grid.Column="14" Classes="header" Classes.active="{Binding SpDefHeader.IsActive}" Content="{Binding SpDefHeader.Text}" Command="{Binding SpDefHeader.Command}" />
+              <Button Grid.Column="15" Classes="header" Classes.active="{Binding SpdHeader.IsActive}" Content="{Binding SpdHeader.Text}" Command="{Binding SpdHeader.Command}" />
+              <Button Grid.Column="16" Classes="header" Classes.active="{Binding TotalHeader.IsActive}" Content="{Binding TotalHeader.Text}" Command="{Binding TotalHeader.Command}" ToolTip.Tip="Sum of the final stats" />
+              <Button Grid.Column="17" Classes="header" Classes.active="{Binding UpdatedHeader.IsActive}" Content="{Binding UpdatedHeader.Text}" Command="{Binding UpdatedHeader.Command}" />
+            </Grid>
+          </Border>
+          <ListBox x:Name="Table" Classes="table" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:SheetDbRow">
+                <Grid ColumnDefinitions="140,110,110,110,44,64,64,84,84,70,50,50,50,58,58,50,56,124,60" Background="Transparent" ToolTip.Tip="{Binding Warning}" ToolTip.ShowDelay="600">
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Classes="td" Classes.bad="{Binding HasErrors}" Classes.hurt="{Binding !HasErrors}" Text="⚠" IsVisible="{Binding HasWarning}" Margin="4,3,0,3" />
+                    <TextBlock Classes="td" Text="{Binding Nickname}" FontWeight="SemiBold" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="1" Classes="td muted" Text="{Binding Folder}" ToolTip.Tip="{Binding Folder}" FontSize="12" />
+                  <TextBlock Grid.Column="2" Classes="td" Text="{Binding SpeciesName}" />
+                  <c:TypeBadges Grid.Column="3" Types="{Binding Types}" Margin="4,0" HorizontalAlignment="Left" />
+                  <TextBlock Grid.Column="4" Classes="td" Text="{Binding Level}" />
+                  <TextBlock Grid.Column="5" Classes="td" Text="{Binding Rarity}" />
+                  <TextBlock Grid.Column="6" Classes="td" Text="{Binding Card}" />
+                  <TextBlock Grid.Column="7" Classes="td" Text="{Binding Status}" />
+                  <TextBlock Grid.Column="8" Classes="td" Text="{Binding Nature}" />
+                  <TextBlock Grid.Column="9" Classes="td" Classes.hurt="{Binding IsHurt}" Classes.fainted="{Binding IsFainted}"
+                             Text="{Binding HpText}" ToolTip.Tip="{Binding HpTip}" />
+                  <TextBlock Grid.Column="10" Classes="td" Text="{Binding StatHp}" />
+                  <TextBlock Grid.Column="11" Classes="td" Text="{Binding Atk}" />
+                  <TextBlock Grid.Column="12" Classes="td" Text="{Binding Def}" />
+                  <TextBlock Grid.Column="13" Classes="td" Text="{Binding SpAtk}" />
+                  <TextBlock Grid.Column="14" Classes="td" Text="{Binding SpDef}" />
+                  <TextBlock Grid.Column="15" Classes="td" Text="{Binding Spd}" />
+                  <TextBlock Grid.Column="16" Classes="td" Text="{Binding TotalText}" FontWeight="SemiBold" />
+                  <TextBlock Grid.Column="17" Classes="td muted" Text="{Binding Updated}" FontSize="12" />
+                  <Button Grid.Column="18" Classes="small" Content="Open" Command="{Binding Open}" HorizontalAlignment="Right" ToolTip.Tip="Open in the list view" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </ScrollViewer>
+    </Panel>
+  </DockPanel>
+</UserControl>

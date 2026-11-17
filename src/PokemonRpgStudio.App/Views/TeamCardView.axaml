@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.TeamCardView"
+             x:DataType="vm:TeamCardViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="28,24">
+      <Button Content="← Back to teams" Command="{Binding BackCommand}" Margin="0,0,0,10" />
+      <TextBlock Classes="page-title" Text="Team Card" />
+      <TextBlock Classes="page-subtitle" Text="Compose any team (trainers, NPCs, rivals…) and export a card with the Pokémon, a trainer image and a theme type. Nothing is saved here — go back to the teams for teams built from your sheets." />
+      <Grid ColumnDefinitions="*,16,*">
+        <StackPanel>
+          <Border Classes="card">
+            <StackPanel Spacing="10">
+              <TextBlock Classes="section-title" Text="Team" />
+              <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                <TextBlock Classes="label" Text="Team name" />
+                <TextBox Grid.Column="1" Text="{Binding TeamName}" Watermark="My Team" />
+                <TextBlock Grid.Row="1" Classes="label" Text="Theme type" />
+                <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ThemeTypes}" SelectedItem="{Binding ThemeType}" MinWidth="180" />
+                <TextBlock Grid.Row="2" Classes="label" Text="Trainer image" />
+                <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                  <Button Content="Choose…" Command="{Binding PickTrainerImageCommand}" />
+                  <Button Content="Remove" Command="{Binding ClearTrainerImageCommand}" />
+                  <TextBlock Classes="muted" Text="{Binding TrainerImagePath, TargetNullValue='No image'}" VerticalAlignment="Center" TextTrimming="PathSegmentEllipsis" MaxWidth="260" />
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <ItemsControl ItemsSource="{Binding Slots}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:FreeSlotVm">
+                <Border Classes="card" Padding="12">
+                  <Grid ColumnDefinitions="64,*">
+                    <Image Width="56" Height="56" Source="{Binding PokemonName, Converter={x:Static c:PokemonImageConverter.Instance}, ConverterParameter=128}" VerticalAlignment="Top" />
+                    <StackPanel Grid.Column="1" Spacing="6">
+                      <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Text="{Binding Title}" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <AutoCompleteBox Grid.Column="1" ItemsSource="{Binding PokemonNames}" SelectedItem="{Binding PokemonName}"
+                                         FilterMode="ContainsOrdinal" MinimumPrefixLength="1" MaxDropDownHeight="360" Watermark="Select a Pokémon…" />
+                        <Button Grid.Column="2" Classes="small" Content="Clear" Command="{Binding ClearCommand}" Margin="6,0,0,0" />
+                      </Grid>
+                      <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Classes="label" Text="Level" />
+                        <TextBox Width="70" Text="{Binding Level}" Watermark="0-150" />
+                        <TextBlock Classes="label" Text="Rarity" />
+                        <ComboBox ItemsSource="{Binding $parent[ItemsControl].((vm:TeamCardViewModel)DataContext).RarityOptions}" SelectedItem="{Binding Rarity}" Width="120" />
+                        <CheckBox Content="Mega" IsChecked="{Binding IsMega}" />
+                      </StackPanel>
+                    </StackPanel>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <Border Grid.Column="2" Classes="card" VerticalAlignment="Top">
+          <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="section-title" Text="Preview" />
+              <Button Grid.Column="1" Classes="accent" Content="Export PNG…" Command="{Binding ExportPngCommand}" />
+            </Grid>
+            <TextBlock Classes="muted" FontSize="12" Text="{Binding PreviewStatus}" />
+            <Image Source="{Binding Preview}" Stretch="Uniform" />
+          </StackPanel>
+        </Border>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

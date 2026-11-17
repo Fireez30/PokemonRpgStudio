@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>PokemonRpgStudio.Core</RootNamespace>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,431 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
+             xmlns:rules="using:PokemonRpgStudio.Core.Rules"
+             x:Class="PokemonRpgStudio.App.Views.PokedexView"
+             x:DataType="vm:PokedexViewModel">
+  <UserControl.DataTemplates>
+    <!-- Move tooltip -->
+    <DataTemplate DataType="vm:MoveInfo">
+      <StackPanel MaxWidth="380" Spacing="4">
+        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14" />
+        <TextBlock Text="No data for this move." IsVisible="{Binding !Found}" FontStyle="Italic" />
+        <StackPanel IsVisible="{Binding Found}" Spacing="3">
+          <c:TypeBadges Types="{Binding Types}" />
+          <TextBlock Text="{Binding Frequency, StringFormat='Freq: {0}'}" />
+          <TextBlock Text="{Binding AC, StringFormat='AC: {0}'}" />
+          <TextBlock Text="{Binding Damage}" IsVisible="{Binding HasDamage}" />
+          <TextBlock Text="{Binding Class, StringFormat='Class: {0}'}" />
+          <TextBlock Text="{Binding Range, StringFormat='Range: {0}'}" TextWrapping="Wrap" />
+          <TextBlock Text="{Binding Effect}" TextWrapping="Wrap" IsVisible="{Binding HasEffect}" Margin="0,4,0,0" />
+        </StackPanel>
+      </StackPanel>
+    </DataTemplate>
+
+    <!-- Editor: list of strings -->
+    <DataTemplate DataType="vm:TextList">
+      <StackPanel Spacing="4" Margin="0,0,0,10">
+        <TextBlock Classes="label" Text="{Binding Title}" FontWeight="SemiBold" />
+        <ItemsControl ItemsSource="{Binding Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:EditableText">
+              <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                <TextBox Text="{Binding Value}" />
+                <Button Grid.Column="1" Classes="small" Content="✕" Margin="4,0,0,0"
+                        Command="{Binding $parent[ItemsControl].((vm:TextList)DataContext).RemoveCommand}" CommandParameter="{Binding}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button Classes="small" Content="+ Add" Command="{Binding AddCommand}" />
+      </StackPanel>
+    </DataTemplate>
+
+    <!-- Editor: list of pairs -->
+    <DataTemplate DataType="vm:PairList">
+      <StackPanel Spacing="4" Margin="0,0,0,10">
+        <TextBlock Classes="label" Text="{Binding Title}" FontWeight="SemiBold" />
+        <ItemsControl ItemsSource="{Binding Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:EditablePair">
+              <Grid ColumnDefinitions="*,*,Auto" Margin="0,0,0,4">
+                <TextBox Text="{Binding First}" Margin="0,0,4,0" />
+                <TextBox Grid.Column="1" Text="{Binding Second}" />
+                <Button Grid.Column="2" Classes="small" Content="✕" Margin="4,0,0,0"
+                        Command="{Binding $parent[ItemsControl].((vm:PairList)DataContext).RemoveCommand}" CommandParameter="{Binding}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button Classes="small" Content="+ Add" Command="{Binding AddCommand}" />
+      </StackPanel>
+    </DataTemplate>
+  </UserControl.DataTemplates>
+
+  <DockPanel Margin="28,24,28,0">
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Classes="page-title" Text="Pokédex" />
+      <TextBlock Classes="page-subtitle" Text="Browse every Pokémon of the RPG: stats, evolutions, abilities, capabilities, skills and learnsets. Hover moves and abilities for details, click a move to copy it as a table row. You can also edit the data." />
+      <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,16">
+        <AutoCompleteBox Width="380" ItemsSource="{Binding PokemonNames}" SelectedItem="{Binding SelectedName}"
+                         FilterMode="ContainsOrdinal" MinimumPrefixLength="0" MaxDropDownHeight="420" Watermark="Search for a Pokémon…" />
+        <ComboBox Width="160" ItemsSource="{Binding TypeFilterOptions}" SelectedItem="{Binding SelectedTypeFilter}"
+                  ToolTip.Tip="Filter the Pokémon list by type" />
+        <Button Content="Edit" Command="{Binding EditCommand}" IsVisible="{Binding IsViewing}" />
+        <Button Classes="accent" Content="Create a sheet" Command="{Binding CreateSheetCommand}" IsVisible="{Binding IsViewing}" />
+        <Button Content="Cancel" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditing}" />
+        <Button Classes="accent" Content="Save changes" Command="{Binding SaveEditCommand}" IsVisible="{Binding IsEditing}" />
+      </StackPanel>
+    </StackPanel>
+
+    <Panel>
+      <TextBlock Classes="muted" Text="Select a Pokémon to see its sheet, or choose a type to browse." IsVisible="{Binding ShowPlaceholder}" />
+
+      <!-- ── Type-filtered browse list ── -->
+      <ScrollViewer IsVisible="{Binding ShowTypeList}">
+        <StackPanel Margin="0,0,0,24">
+          <TextBlock Classes="section-title" Text="{Binding TypeListTitle}" />
+          <TextBlock Classes="muted" Text="No Pokémon of this type." IsVisible="{Binding !FilteredPokemon.Count}" />
+          <ItemsControl ItemsSource="{Binding FilteredPokemon}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:PokemonListItem">
+                <Button Command="{Binding Open}" Width="150" Margin="0,0,10,10" Padding="8"
+                        Background="{DynamicResource SubtleBackground}" HorizontalContentAlignment="Center">
+                  <StackPanel Spacing="6" HorizontalAlignment="Center">
+                    <Image Width="96" Height="96" Source="{Binding Name, Converter={x:Static c:PokemonImageConverter.Instance}, ConverterParameter=128}" />
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap" />
+                    <c:TypeBadges Types="{Binding Types}" HorizontalAlignment="Center" />
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- ── Viewer ── -->
+      <ScrollViewer IsVisible="{Binding IsViewing}">
+        <Grid ColumnDefinitions="*,16,*" Margin="0,0,0,24">
+          <StackPanel>
+            <Border Classes="card">
+              <StackPanel Spacing="14">
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                  <Border Classes="subtle" Width="132" Height="132">
+                    <Image Source="{Binding SelectedName, Converter={x:Static c:PokemonImageConverter.Instance}}" />
+                  </Border>
+                  <StackPanel VerticalAlignment="Center" Spacing="8">
+                    <TextBlock Text="{Binding Species.DisplayName, FallbackValue=''}" FontSize="26" FontWeight="Bold" />
+                    <c:TypeBadges Types="{Binding Species.PokemonTypes, FallbackValue={x:Null}}" BadgeFontSize="13" />
+                  </StackPanel>
+                </StackPanel>
+
+                <StackPanel Spacing="4" IsVisible="{Binding Matchups.HasGroups}">
+                  <TextBlock Classes="section-title" Text="Damage taken" ToolTip.Tip="Multiplier of each attacking type on this Pokémon's types (neutral ×1 types are not listed)" />
+                  <views:TypeMatchupsView DataContext="{Binding Matchups}" />
+                </StackPanel>
+
+                <TextBlock Classes="section-title" Text="Stats" />
+                <ItemsControl ItemsSource="{Binding Stats}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:StatBar">
+                      <Grid ColumnDefinitions="70,170,Auto" Margin="0,2">
+                        <TextBlock Classes="label" Text="{Binding Label}" />
+                        <Border Grid.Column="1" Background="{DynamicResource SubtleBackground}" CornerRadius="5" Height="12">
+                          <Border Background="{DynamicResource StatBar}" CornerRadius="5" Width="{Binding Width}" HorizontalAlignment="Left" />
+                        </Border>
+                        <TextBlock Grid.Column="2" Text="{Binding Value}" FontWeight="SemiBold" Margin="10,0" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Classes="section-title" Text="Info" />
+                <ItemsControl ItemsSource="{Binding Info}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:KeyValueRow">
+                      <Grid ColumnDefinitions="110,*" Margin="0,2">
+                        <TextBlock Classes="label" Text="{Binding Key}" VerticalAlignment="Top" />
+                        <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <StackPanel IsVisible="{Binding HasEvolutions}">
+                  <TextBlock Classes="section-title" Text="Evolutions" />
+                  <ItemsControl ItemsSource="{Binding Evolutions}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:EvolutionGroupVm">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                          <TextBlock Text="→" FontSize="18" Margin="6,0" VerticalAlignment="Center" IsVisible="{Binding ShowArrow}" />
+                          <ItemsControl ItemsSource="{Binding Steps}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate x:DataType="vm:EvolutionStepVm">
+                                <Button Classes="small" Command="{Binding Open}" IsEnabled="{Binding IsLink}" Margin="0,0,0,3"
+                                        Background="{DynamicResource SubtleBackground}" Padding="10,4">
+                                  <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Classes.bad="{Binding IsCurrent}" />
+                                    <TextBlock Text="{Binding Condition}" FontSize="11" Classes="muted" IsVisible="{Binding HasCondition}" />
+                                  </StackPanel>
+                                </Button>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </StackPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+
+                <TextBlock Classes="section-title" Text="Abilities" />
+                <ItemsControl ItemsSource="{Binding AbilityGroups}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AbilityGroup">
+                      <Grid ColumnDefinitions="110,*" Margin="0,2">
+                        <TextBlock Classes="label" Text="{Binding Tier}" VerticalAlignment="Top" Margin="0,4,0,0" />
+                        <ItemsControl Grid.Column="1" ItemsSource="{Binding Abilities}">
+                          <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AbilityInfo">
+                              <Border Classes="chip" ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="150">
+                                <TextBlock Text="{Binding Name}" TextDecorations="Underline" />
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid ColumnDefinitions="*,16,*">
+                  <StackPanel>
+                    <TextBlock Classes="section-title" Text="Capabilities" />
+                    <ItemsControl ItemsSource="{Binding Capabilities}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:KeyValueRow">
+                          <Grid ColumnDefinitions="*,Auto" Margin="0,1">
+                            <TextBlock Text="{Binding Key}" TextWrapping="Wrap" />
+                            <TextBlock Grid.Column="1" Text="{Binding Value}" FontWeight="SemiBold" Margin="8,0,0,0" />
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                  <StackPanel Grid.Column="2">
+                    <TextBlock Classes="section-title" Text="Skills" />
+                    <ItemsControl ItemsSource="{Binding Skills}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:KeyValueRow">
+                          <Grid ColumnDefinitions="*,Auto" Margin="0,1">
+                            <TextBlock Text="{Binding Key}" />
+                            <TextBlock Grid.Column="1" Text="{Binding Value}" FontWeight="SemiBold" />
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card" IsVisible="{Binding HasMega}">
+              <StackPanel Spacing="10">
+                <TextBlock Classes="section-title" Text="{Binding MegaTitle}" />
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                  <Image Width="110" Height="110" Source="{Binding MegaImage, Converter={x:Static c:PathImageConverter.Instance}}" />
+                  <StackPanel VerticalAlignment="Center" Spacing="8">
+                    <c:TypeBadges Types="{Binding MegaTypes}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding MegaAbility, Converter={x:Static ObjectConverters.IsNotNull}}">
+                      <TextBlock Classes="label" Text="Ability" />
+                      <Border Classes="chip" ToolTip.Tip="{Binding MegaAbility.Tip, FallbackValue=''}">
+                        <TextBlock Text="{Binding MegaAbility.Name, FallbackValue=''}" TextDecorations="Underline" />
+                      </Border>
+                    </StackPanel>
+                  </StackPanel>
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding MegaStats}">
+                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:MegaStatVm">
+                      <Border Classes="subtle" Margin="0,0,8,8" MinWidth="70">
+                        <StackPanel HorizontalAlignment="Center">
+                          <TextBlock Text="{Binding Value}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"
+                                     Classes.good="{Binding Positive}" Classes.bad="{Binding Negative}" />
+                          <TextBlock Text="{Binding Label}" Classes="label" HorizontalAlignment="Center" />
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <StackPanel Grid.Column="2">
+            <Border Classes="card">
+              <StackPanel Grid.IsSharedSizeScope="True">
+                <TextBlock Classes="section-title" Text="Level-up moves" />
+                <Grid Margin="0,0,0,4">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="44" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="types" />
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="cls" />
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="56" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Classes="th" Text="Lv" />
+                  <TextBlock Grid.Column="1" Classes="th" Text="Move" />
+                  <TextBlock Grid.Column="2" Classes="th" Text="Type" />
+                  <TextBlock Grid.Column="3" Classes="th" Text="Class" />
+                  <TextBlock Grid.Column="4" Classes="th" Text="Roll" />
+                </Grid>
+                <ItemsControl ItemsSource="{Binding LevelMoves}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LevelMoveRow">
+                      <Border Classes="row">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="44" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="types" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cls" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="56" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Classes="td" Text="{Binding Level}" Foreground="{DynamicResource MutedText}" />
+                          <TextBlock Grid.Column="1" Classes="td" Text="{Binding Info.Name}" ToolTip.Tip="{Binding Info}" ToolTip.ShowDelay="150" TextDecorations="Underline" />
+                          <c:TypeBadges Grid.Column="2" Types="{Binding Info.Types}" Margin="4,0" />
+                          <c:ClassBadge Grid.Column="3" ClassName="{Binding Info.Class}" Margin="4,0" VerticalAlignment="Center" />
+                          <TextBlock Grid.Column="4" Classes="td" Text="{Binding Roll}" FontFamily="monospace" />
+                          <Button Grid.Column="5" Classes="small" Content="Copy" Command="{Binding Copy}" ToolTip.Tip="Copy as a table row" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <ItemsControl ItemsSource="{Binding OtherMoves}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:MovePillGroup">
+                  <Border Classes="card">
+                    <StackPanel>
+                      <TextBlock Classes="section-title" Text="{Binding Title}" />
+                      <TextBlock Classes="muted" Text="None" IsVisible="{Binding IsEmpty}" />
+                      <ItemsControl ItemsSource="{Binding Moves}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:MovePill">
+                            <Button Classes="small" Margin="0,0,6,6" Command="{Binding Copy}" Content="{Binding Info.Name}"
+                                    ToolTip.Tip="{Binding Info}" ToolTip.ShowDelay="150" CornerRadius="12" />
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Grid>
+      </ScrollViewer>
+
+      <!-- ── Editor ── -->
+      <ScrollViewer IsVisible="{Binding IsEditing}">
+        <Grid ColumnDefinitions="*,16,*" Margin="0,0,0,24" DataContext="{Binding Editor}" x:DataType="vm:SpeciesEditorViewModel">
+          <StackPanel>
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="section-title" Text="Identity &amp; stats" />
+                <Grid ColumnDefinitions="110,*">
+                  <TextBlock Classes="label" Text="Name" />
+                  <TextBox Grid.Column="1" Text="{Binding Name}" />
+                </Grid>
+                <WrapPanel>
+                  <StackPanel Margin="0,0,10,6"><TextBlock Classes="label" Text="HP" /><NumericUpDown Value="{Binding Hp}" Minimum="0" Maximum="99" Width="110" FormatString="0" /></StackPanel>
+                  <StackPanel Margin="0,0,10,6"><TextBlock Classes="label" Text="ATK" /><NumericUpDown Value="{Binding Atk}" Minimum="0" Maximum="99" Width="110" FormatString="0" /></StackPanel>
+                  <StackPanel Margin="0,0,10,6"><TextBlock Classes="label" Text="DEF" /><NumericUpDown Value="{Binding Def}" Minimum="0" Maximum="99" Width="110" FormatString="0" /></StackPanel>
+                  <StackPanel Margin="0,0,10,6"><TextBlock Classes="label" Text="SP.ATK" /><NumericUpDown Value="{Binding SpAtk}" Minimum="0" Maximum="99" Width="110" FormatString="0" /></StackPanel>
+                  <StackPanel Margin="0,0,10,6"><TextBlock Classes="label" Text="SP.DEF" /><NumericUpDown Value="{Binding SpDef}" Minimum="0" Maximum="99" Width="110" FormatString="0" /></StackPanel>
+                  <StackPanel Margin="0,0,10,6"><TextBlock Classes="label" Text="SPD" /><NumericUpDown Value="{Binding Spd}" Minimum="0" Maximum="99" Width="110" FormatString="0" /></StackPanel>
+                </WrapPanel>
+                <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
+                  <TextBlock Classes="label" Text="Height" /><TextBox Grid.Column="1" Text="{Binding Height}" />
+                  <TextBlock Grid.Row="1" Classes="label" Text="Weight" /><TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Weight}" />
+                  <TextBlock Grid.Row="2" Classes="label" Text="Gender % M / F" />
+                  <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                    <TextBox Width="90" Text="{Binding GenderM}" Watermark="M" />
+                    <TextBlock Text="/" VerticalAlignment="Center" />
+                    <TextBox Width="90" Text="{Binding GenderF}" Watermark="F" />
+                    <TextBlock Classes="muted" Text="(-1 = genderless)" VerticalAlignment="Center" />
+                  </StackPanel>
+                  <TextBlock Grid.Row="3" Classes="label" Text="Egg group" /><TextBox Grid.Row="3" Grid.Column="1" Text="{Binding EggGroup}" />
+                  <TextBlock Grid.Row="4" Classes="label" Text="Hatch rate" /><TextBox Grid.Row="4" Grid.Column="1" Text="{Binding HatchRate}" />
+                  <TextBlock Grid.Row="5" Classes="label" Text="Diet" /><TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Diet}" />
+                  <TextBlock Grid.Row="6" Classes="label" Text="Habitat" /><TextBox Grid.Row="6" Grid.Column="1" Text="{Binding Habitat}" />
+                </Grid>
+              </StackPanel>
+            </Border>
+            <Border Classes="card">
+              <StackPanel>
+                <TextBlock Classes="section-title" Text="Types &amp; evolutions" />
+                <ContentControl Content="{Binding Types}" />
+                <ContentControl Content="{Binding Evolutions}" />
+              </StackPanel>
+            </Border>
+            <Border Classes="card">
+              <StackPanel>
+                <TextBlock Classes="section-title" Text="Abilities" />
+                <ItemsControl ItemsSource="{Binding SimpleAbilityLists}" />
+                <ContentControl Content="{Binding CustomAbilities}" />
+              </StackPanel>
+            </Border>
+            <Border Classes="card">
+              <StackPanel>
+                <TextBlock Classes="section-title" Text="Capabilities &amp; skills" />
+                <ContentControl Content="{Binding Capabilities}" />
+                <ContentControl Content="{Binding Skills}" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <StackPanel Grid.Column="2">
+            <Border Classes="card">
+              <StackPanel Spacing="4">
+                <TextBlock Classes="section-title" Text="Level-up moves" />
+                <ItemsControl ItemsSource="{Binding LevelMoves.Items}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:EditableLevelMove">
+                      <Grid ColumnDefinitions="110,*,130,Auto" Margin="0,0,0,4">
+                        <NumericUpDown Value="{Binding Level}" Minimum="0" Maximum="150" FormatString="0" />
+                        <TextBox Grid.Column="1" Text="{Binding Name}" Margin="4,0" />
+                        <ComboBox Grid.Column="2" ItemsSource="{x:Static rules:SheetRules.AllTypes}"
+                                  SelectedItem="{Binding Type}" HorizontalAlignment="Stretch" />
+                        <Button Grid.Column="3" Classes="small" Content="✕" Margin="4,0,0,0"
+                                Command="{Binding $parent[ItemsControl].((vm:SpeciesEditorViewModel)DataContext).LevelMoves.RemoveCommand}" CommandParameter="{Binding}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Classes="small" Content="+ Add move" Command="{Binding LevelMoves.AddCommand}" />
+              </StackPanel>
+            </Border>
+            <Border Classes="card">
+              <StackPanel>
+                <TextBlock Classes="section-title" Text="TM / tutor / egg moves" />
+                <ItemsControl ItemsSource="{Binding OtherMoveLists}" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Grid>
+      </ScrollViewer>
+    </Panel>
+  </DockPanel>
+</UserControl>

@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.AnalyzerView"
+             x:DataType="vm:AnalyzerViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="28,24" MaxWidth="1000" HorizontalAlignment="Left">
+      <TextBlock Classes="page-title" Text="Pokémon Analyzer" />
+      <TextBlock Classes="page-subtitle" Text="Number of moves of each type a Pokémon can learn (level-up, egg, TM and tutor moves)." />
+      <Border Classes="card">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <TextBlock Classes="label" Text="Pokémon" />
+          <AutoCompleteBox Width="320" ItemsSource="{Binding PokemonNames}" SelectedItem="{Binding SelectedName}"
+                           FilterMode="ContainsOrdinal" MinimumPrefixLength="0" MaxDropDownHeight="400" Watermark="Search a Pokémon…" />
+        </StackPanel>
+      </Border>
+      <Border Classes="card" IsVisible="{Binding Species, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <StackPanel Spacing="10">
+          <StackPanel Orientation="Horizontal" Spacing="16">
+            <Image Width="96" Height="96" Source="{Binding SelectedName, Converter={x:Static c:PokemonImageConverter.Instance}}" />
+            <StackPanel VerticalAlignment="Center" Spacing="6">
+              <TextBlock Text="{Binding Species.DisplayName, FallbackValue=''}" FontSize="20" FontWeight="Bold" />
+              <c:TypeBadges Types="{Binding Species.PokemonTypes, FallbackValue={x:Null}}" />
+              <TextBlock Classes="muted" Text="{Binding Summary}" />
+              <TextBlock Classes="muted" FontStyle="Italic" IsVisible="{Binding UsedFallbackEggMoves}"
+                         Text="This Pokémon has no egg moves of its own: the egg moves of its base form are counted." />
+            </StackPanel>
+          </StackPanel>
+          <ItemsControl ItemsSource="{Binding Rows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:TypeBarRow">
+                <Grid ColumnDefinitions="110,Auto,*" Margin="0,3">
+                  <Border Background="{Binding Type, Converter={x:Static c:TypeBrushConverter.Instance}}" CornerRadius="10" Padding="8,2" HorizontalAlignment="Left">
+                    <TextBlock Text="{Binding Type}" FontWeight="SemiBold" FontSize="12" Foreground="{Binding Type, Converter={x:Static c:TypeForegroundConverter.Instance}}" />
+                  </Border>
+                  <Border Grid.Column="1" Width="{Binding Width}" Height="16" CornerRadius="6" Background="{Binding Type, Converter={x:Static c:TypeBrushConverter.Instance}}" />
+                  <TextBlock Grid.Column="2" Text="{Binding Count}" Margin="10,0" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

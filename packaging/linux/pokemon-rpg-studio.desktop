@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Pokémon RPG Studio
+GenericName=Pokémon RPG sheet manager
+Comment=Create, save and edit Pokémon RPG character sheets, teams and encounter zones
+Exec=PokemonRpgStudio
+Icon=pokemon-rpg-studio
+Terminal=false
+Categories=Game;RolePlaying;Utility;
+Keywords=pokemon;rpg;sheet;dice;tabletop;
+StartupWMClass=PokemonRpgStudio

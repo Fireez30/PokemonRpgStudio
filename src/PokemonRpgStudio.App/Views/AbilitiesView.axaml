@@ -1,0 +1,121 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             x:Class="PokemonRpgStudio.App.Views.AbilitiesView"
+             x:DataType="vm:AbilitiesViewModel">
+  <UserControl.Styles>
+    <Style Selector="Button.header">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="4,2" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedText}" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Button.header.active">
+      <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+    </Style>
+    <Style Selector="ListBox.table ListBoxItem">
+      <Setter Property="Padding" Value="4,4" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="28,24,28,0">
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Classes="page-title" Text="Abilities" />
+      <TextBlock Classes="page-subtitle" Text="Every ability of abilities.json. Filter the list, click a column title to sort by it (click again to reverse), select an ability to read it and see which Pokémon have it." />
+      <WrapPanel Margin="0,0,0,12">
+        <TextBox Width="260" Watermark="Search an ability…" Text="{Binding FilterText}" Margin="0,0,8,8" />
+        <CheckBox Content="Search in effects" IsChecked="{Binding SearchEffects}" Margin="0,0,16,8" />
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,8">
+          <TextBlock Classes="label" Text="Frequency" />
+          <ComboBox ItemsSource="{Binding FrequencyOptions}" SelectedItem="{Binding SelectedFrequency}" MinWidth="110" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,8">
+          <TextBlock Classes="label" Text="Pokémon" />
+          <AutoCompleteBox Width="200" ItemsSource="{Binding PokemonNames}" SelectedItem="{Binding Pokemon}"
+                           FilterMode="ContainsOrdinal" MinimumPrefixLength="0" MaxDropDownHeight="360" Watermark="Any Pokémon" />
+        </StackPanel>
+        <CheckBox Content="Only abilities a Pokémon has" IsChecked="{Binding OnlyUsed}" Margin="0,0,16,8" />
+        <Button Content="Clear filters" Command="{Binding ClearFiltersCommand}" Margin="0,0,0,8" />
+      </WrapPanel>
+    </StackPanel>
+
+    <Grid x:Name="Split" ColumnDefinitions="*,16,400" RowDefinitions="*,Auto">
+      <!-- ── Table ── -->
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Bottom" Classes="muted" FontSize="11" Margin="4,6,0,10" Text="{Binding CountText}" />
+        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="4,0">
+          <Grid ColumnDefinitions="180,100,*,86">
+            <Button Classes="header" Classes.active="{Binding NameHeader.IsActive}" Content="{Binding NameHeader.Text}" Command="{Binding NameHeader.Command}" />
+            <Button Grid.Column="1" Classes="header" Classes.active="{Binding FrequencyHeader.IsActive}" Content="{Binding FrequencyHeader.Text}" Command="{Binding FrequencyHeader.Command}" />
+            <TextBlock Grid.Column="2" Classes="th" Text="Effect" VerticalAlignment="Center" />
+            <Button Grid.Column="3" Classes="header" Classes.active="{Binding HoldersHeader.IsActive}" Content="{Binding HoldersHeader.Text}" Command="{Binding HoldersHeader.Command}" ToolTip.Tip="Number of Pokémon that can have the ability" />
+          </Grid>
+        </Border>
+        <ListBox Classes="table" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" Background="Transparent">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:AbilityRow">
+              <Grid ColumnDefinitions="180,100,*,86">
+                <TextBlock Classes="td" Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="1" Classes="td" Text="{Binding Frequency}" />
+                <TextBlock Grid.Column="2" Classes="td" Text="{Binding Summary}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource MutedText}" />
+                <TextBlock Grid.Column="3" Classes="td" Text="{Binding Holders}" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+
+      <!-- ── Details (beside the table, or below it in narrow windows) ── -->
+      <ScrollViewer x:Name="DetailsPane" Grid.Column="2" Margin="0,0,0,12">
+        <Panel>
+          <TextBlock Classes="muted" Text="Select an ability to see its details." IsVisible="{Binding !HasSelection}" />
+          <StackPanel IsVisible="{Binding HasSelection}">
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="{Binding SelectedRow.Name, FallbackValue=''}" FontSize="20" FontWeight="Bold" TextWrapping="Wrap" />
+                  <Button Grid.Column="1" Classes="small" Content="Copy" Command="{Binding CopyAbilityCommand}" VerticalAlignment="Top" />
+                </Grid>
+                <Border Classes="chip" HorizontalAlignment="Left">
+                  <TextBlock Text="{Binding SelectedRow.Frequency, FallbackValue=''}" FontWeight="SemiBold" />
+                </Border>
+                <SelectableTextBlock Text="{Binding DetailsEffect}" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="6">
+                <TextBlock Classes="section-title" Text="{Binding HoldersTitle}" />
+                <TextBlock Classes="muted" Text="No Pokémon has this ability." IsVisible="{Binding HasNoHolders}" />
+                <TextBlock Classes="muted" FontSize="11" Text="Click a Pokémon to open it in the Pokédex." IsVisible="{Binding !HasNoHolders}" />
+                <ItemsControl ItemsSource="{Binding HolderGroups}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PokemonLinkGroup">
+                      <StackPanel Margin="0,4,0,6">
+                        <TextBlock Classes="label" FontWeight="SemiBold" Text="{Binding Header}" Margin="0,0,0,4" />
+                        <ItemsControl ItemsSource="{Binding Pokemon}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PokemonLink">
+                              <Button Classes="small" Content="{Binding Text}" Command="{Binding Open}" Margin="0,0,4,4" />
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Panel>
+      </ScrollViewer>
+    </Grid>
+  </DockPanel>
+</UserControl>

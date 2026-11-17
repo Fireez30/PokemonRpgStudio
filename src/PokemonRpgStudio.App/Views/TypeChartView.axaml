@@ -1,0 +1,105 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.TypeChartView"
+             x:DataType="vm:TypeChartViewModel">
+  <ScrollViewer HorizontalScrollBarVisibility="Auto">
+    <StackPanel Margin="28,24" HorizontalAlignment="Left">
+      <TextBlock Classes="page-title" Text="Type Chart" />
+      <TextBlock Classes="page-subtitle" MaxWidth="1000" HorizontalAlignment="Left"
+                 Text="Damage multiplier of an attacking type (column) on a defending type (row): 0 no effect, 0.5 not very effective, 1 neutral, 2 super effective. Click a row's type to see what hits it." />
+
+      <!-- Defender calculator -->
+      <Border Classes="card" MaxWidth="1000" HorizontalAlignment="Left">
+        <StackPanel Spacing="12">
+          <TextBlock Classes="section-title" Text="Damage taken by a Pokémon" />
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock Classes="label" Text="Type 1" />
+            <ComboBox Width="150" ItemsSource="{Binding Types}" SelectedItem="{Binding FirstType}" />
+            <TextBlock Classes="label" Text="Type 2" />
+            <ComboBox Width="150" ItemsSource="{Binding SecondTypeOptions}" SelectedItem="{Binding SecondType}" />
+            <c:TypeBadges Types="{Binding DefenderTypes}" BadgeFontSize="12" Margin="8,0,0,0" />
+          </StackPanel>
+          <ItemsControl ItemsSource="{Binding Groups}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:TypeMultiplierGroup">
+                <Grid ColumnDefinitions="64,150,*" Margin="0,3">
+                  <Border Background="{Binding Multiplier, Converter={x:Static c:EffectivenessBrushConverter.Instance}}"
+                          CornerRadius="6" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Label}" FontWeight="Bold" />
+                  </Border>
+                  <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Description}" VerticalAlignment="Center" />
+                  <c:TypeBadges Grid.Column="2" Types="{Binding Types}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- Full chart -->
+      <Border Classes="card" HorizontalAlignment="Left">
+        <StackPanel>
+          <!-- Header: attacking types -->
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Width="96" Classes="th" FontSize="11" VerticalAlignment="Bottom" Text="Def ↓  Atk →" />
+            <ItemsControl ItemsSource="{Binding Types}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <Border Width="56" Margin="1" Padding="0,3" CornerRadius="4"
+                          Background="{Binding, Converter={x:Static c:TypeBrushConverter.Instance}}">
+                    <TextBlock Text="{Binding}" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
+                               Foreground="{Binding, Converter={x:Static c:TypeForegroundConverter.Instance}}" />
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+          <!-- One row per defending type -->
+          <ItemsControl ItemsSource="{Binding Rows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:TypeChartRow">
+                <StackPanel Orientation="Horizontal">
+                  <Button Width="94" Margin="1,1,1,1" Padding="0,3" CornerRadius="4" HorizontalContentAlignment="Center"
+                          Background="{Binding Defending, Converter={x:Static c:TypeBrushConverter.Instance}}"
+                          Command="{Binding $parent[UserControl].((vm:TypeChartViewModel)DataContext).PickDefenderCommand}"
+                          CommandParameter="{Binding Defending}"
+                          ToolTip.Tip="Show what hits this type">
+                    <TextBlock Text="{Binding Defending}" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{Binding Defending, Converter={x:Static c:TypeForegroundConverter.Instance}}" />
+                  </Button>
+                  <ItemsControl ItemsSource="{Binding Cells}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:TypeChartCell">
+                        <Border Width="56" Margin="1" CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource CardBorder}"
+                                Background="{Binding Multiplier, Converter={x:Static c:EffectivenessBrushConverter.Instance}}"
+                                ToolTip.Tip="{Binding ToolTip}">
+                          <TextBlock Text="{Binding Text}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,12,0,0">
+            <TextBlock Classes="muted" FontSize="12" VerticalAlignment="Center" Text="Edit the chart in" />
+            <SelectableTextBlock FontSize="12" VerticalAlignment="Center" Text="{Binding ChartFile}" />
+            <Button Classes="small" Content="Open data folder" Command="{Binding OpenDataFolderCommand}" />
+          </StackPanel>
+          <TextBlock Classes="muted" FontSize="12" Text="After editing it, use Settings → Game data → Reload data." />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

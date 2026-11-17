@@ -1,0 +1,152 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.MovesView"
+             x:DataType="vm:MovesViewModel">
+  <UserControl.Styles>
+    <Style Selector="Button.header">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="4,2" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedText}" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Button.header.active">
+      <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+    </Style>
+    <Style Selector="ListBox.table ListBoxItem">
+      <Setter Property="Padding" Value="4,4" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel Margin="28,24,28,0">
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Classes="page-title" Text="Moves" />
+      <TextBlock Classes="page-subtitle" Text="Every move of moves.json. Filter the list, click a column title to sort by it (click again to reverse), select a move to see its effect and the Pokémon that learn it." />
+      <WrapPanel Margin="0,0,0,12">
+        <TextBox Width="260" Watermark="Search a move…" Text="{Binding FilterText}" Margin="0,0,8,8" />
+        <CheckBox Content="Search in effects" IsChecked="{Binding SearchEffects}" Margin="0,0,16,8" />
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,8">
+          <TextBlock Classes="label" Text="Type" />
+          <ComboBox ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding SelectedType}" MinWidth="110" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,8">
+          <TextBlock Classes="label" Text="Class" />
+          <ComboBox ItemsSource="{Binding ClassOptions}" SelectedItem="{Binding SelectedClass}" MinWidth="110" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,8">
+          <TextBlock Classes="label" Text="Frequency" />
+          <ComboBox ItemsSource="{Binding FrequencyOptions}" SelectedItem="{Binding SelectedFrequency}" MinWidth="110" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,8">
+          <TextBlock Classes="label" Text="Learnable by" />
+          <AutoCompleteBox Width="200" ItemsSource="{Binding PokemonNames}" SelectedItem="{Binding LearnableBy}"
+                           FilterMode="ContainsOrdinal" MinimumPrefixLength="0" MaxDropDownHeight="360" Watermark="Any Pokémon" />
+        </StackPanel>
+        <Button Content="Clear filters" Command="{Binding ClearFiltersCommand}" Margin="0,0,0,8" />
+      </WrapPanel>
+    </StackPanel>
+
+    <Grid x:Name="Split" ColumnDefinitions="*,16,360" RowDefinitions="*,Auto">
+      <!-- ── Table ── -->
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Bottom" Classes="muted" FontSize="11" Margin="4,6,0,10" Text="{Binding CountText}" />
+          <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="4,0">
+            <Grid ColumnDefinitions="160,116,74,84,36,36,70,*,64">
+              <Button Classes="header" Classes.active="{Binding NameHeader.IsActive}" Content="{Binding NameHeader.Text}" Command="{Binding NameHeader.Command}" />
+              <Button Grid.Column="1" Classes="header" Classes.active="{Binding TypeHeader.IsActive}" Content="{Binding TypeHeader.Text}" Command="{Binding TypeHeader.Command}" />
+              <Button Grid.Column="2" Classes="header" Classes.active="{Binding ClassHeader.IsActive}" Content="{Binding ClassHeader.Text}" Command="{Binding ClassHeader.Command}" />
+              <Button Grid.Column="3" Classes="header" Classes.active="{Binding FrequencyHeader.IsActive}" Content="{Binding FrequencyHeader.Text}" Command="{Binding FrequencyHeader.Command}" />
+              <Button Grid.Column="4" Classes="header" Classes.active="{Binding AcHeader.IsActive}" Content="{Binding AcHeader.Text}" Command="{Binding AcHeader.Command}" ToolTip.Tip="Accuracy check" />
+              <Button Grid.Column="5" Classes="header" Classes.active="{Binding DamageHeader.IsActive}" Content="{Binding DamageHeader.Text}" Command="{Binding DamageHeader.Command}" ToolTip.Tip="Damage base" />
+              <TextBlock Grid.Column="6" Classes="th" Text="Roll" VerticalAlignment="Center" />
+              <Button Grid.Column="7" Classes="header" Classes.active="{Binding RangeHeader.IsActive}" Content="{Binding RangeHeader.Text}" Command="{Binding RangeHeader.Command}" />
+              <Button Grid.Column="8" Classes="header" Classes.active="{Binding LearnersHeader.IsActive}" Content="{Binding LearnersHeader.Text}" Command="{Binding LearnersHeader.Command}" ToolTip.Tip="Number of Pokémon that can learn the move" />
+            </Grid>
+          </Border>
+          <ListBox Classes="table" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:MoveRow">
+                <Grid ColumnDefinitions="160,116,74,84,36,36,70,*,64">
+                  <TextBlock Classes="td" Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                  <c:TypeBadges Grid.Column="1" Types="{Binding Types}" Margin="4,0" HorizontalAlignment="Left" />
+                  <TextBlock Grid.Column="2" Classes="td" Text="{Binding Class}" />
+                  <TextBlock Grid.Column="3" Classes="td" Text="{Binding Frequency}" />
+                  <TextBlock Grid.Column="4" Classes="td" Text="{Binding AC}" />
+                  <TextBlock Grid.Column="5" Classes="td" Text="{Binding DamageBase}" />
+                  <TextBlock Grid.Column="6" Classes="td" Text="{Binding Roll}" />
+                  <TextBlock Grid.Column="7" Classes="td" Text="{Binding Range}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                             ToolTip.Tip="{Binding Range}" />
+                  <TextBlock Grid.Column="8" Classes="td" Text="{Binding Learners}" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+
+      <!-- ── Details (beside the table, or below it in narrow windows) ── -->
+      <ScrollViewer x:Name="DetailsPane" Grid.Column="2" Margin="0,0,0,12">
+        <Panel>
+          <TextBlock Classes="muted" Text="Select a move to see its details." IsVisible="{Binding !HasSelection}" />
+          <StackPanel IsVisible="{Binding HasSelection}">
+            <Border Classes="card">
+              <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="{Binding Details.Name, FallbackValue=''}" FontSize="20" FontWeight="Bold" TextWrapping="Wrap" />
+                  <Button Grid.Column="1" Classes="small" Content="Copy" Command="{Binding CopyMoveCommand}" VerticalAlignment="Top"
+                          ToolTip.Tip="Copy the move as a table row (paste into Google Docs / Sheets)" />
+                </Grid>
+                <c:TypeBadges Types="{Binding Details.Types, FallbackValue={x:Null}}" BadgeFontSize="13" />
+                <Grid ColumnDefinitions="90,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="0,6,0,0">
+                  <TextBlock Classes="label" Text="Class" />
+                  <TextBlock Grid.Column="1" Text="{Binding Details.Class, FallbackValue=''}" />
+                  <TextBlock Grid.Row="1" Classes="label" Text="Frequency" />
+                  <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Details.Frequency, FallbackValue=''}" />
+                  <TextBlock Grid.Row="2" Classes="label" Text="AC" />
+                  <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Details.AC, FallbackValue=''}" />
+                  <TextBlock Grid.Row="3" Classes="label" Text="Damage" />
+                  <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Details.Damage, FallbackValue=''}" />
+                  <TextBlock Grid.Row="4" Classes="label" Text="Range" VerticalAlignment="Top" />
+                  <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Details.Range, FallbackValue=''}" TextWrapping="Wrap" />
+                </Grid>
+                <TextBlock Classes="section-title" Text="Effect" Margin="0,8,0,0" IsVisible="{Binding Details.HasEffect, FallbackValue=False}" />
+                <SelectableTextBlock Text="{Binding Details.Effect, FallbackValue=''}" TextWrapping="Wrap" IsVisible="{Binding Details.HasEffect, FallbackValue=False}" />
+              </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+              <StackPanel Spacing="6">
+                <TextBlock Classes="section-title" Text="{Binding LearnersTitle}" />
+                <TextBlock Classes="muted" Text="No Pokémon learns this move." IsVisible="{Binding HasNoLearners}" />
+                <TextBlock Classes="muted" FontSize="11" Text="Click a Pokémon to open it in the Pokédex." IsVisible="{Binding !HasNoLearners}" />
+                <ItemsControl ItemsSource="{Binding LearnerGroups}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PokemonLinkGroup">
+                      <StackPanel Margin="0,4,0,6">
+                        <TextBlock Classes="label" FontWeight="SemiBold" Text="{Binding Header}" Margin="0,0,0,4" />
+                        <ItemsControl ItemsSource="{Binding Pokemon}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PokemonLink">
+                              <Button Classes="small" Content="{Binding Text}" Command="{Binding Open}" Margin="0,0,4,4" />
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Panel>
+      </ScrollViewer>
+    </Grid>
+  </DockPanel>
+</UserControl>

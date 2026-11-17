@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>PokemonRpgStudio.App</RootNamespace>
+    <AssemblyName>PokemonRpgStudio</AssemblyName>
+    <ApplicationIcon>Assets/app-icon.ico</ApplicationIcon>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Default game data shipped next to the executable (DefaultData/). Data defaults to ./pokemon_data and sprites to ./pokemon_images at the project root;
+         override with -p:PokemonDataDir=... / -p:PokemonImagesDir=... -->
+    <ProjectRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</ProjectRoot>
+    <PokemonDataDir Condition="'$(PokemonDataDir)' == ''">$(ProjectRoot)/pokemon_data</PokemonDataDir>
+    <PokemonImagesDir Condition="'$(PokemonImagesDir)' == ''">$(ProjectRoot)/pokemon_images</PokemonImagesDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(PokemonDataDir)/pokemon.json;$(PokemonDataDir)/moves.json;$(PokemonDataDir)/abilities.json">
+      <!-- Default copies only: on first start they are copied to the user's data folder, which is
+           where the application reads (and updates) them. Never embedded in the executable. -->
+      <Link>DefaultData/%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+    <!-- Optional: a type_chart.json beside the other files (otherwise the built-in chart is written on first start). -->
+    <Content Include="$(PokemonDataDir)/type_chart.json" Condition="Exists('$(PokemonDataDir)/type_chart.json')">
+      <Link>DefaultData/%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+    <Content Include="$(PokemonImagesDir)/*.png;$(PokemonImagesDir)/*.jpg;$(PokemonImagesDir)/*.jpeg;$(PokemonImagesDir)/*.webp">
+      <Link>DefaultData/images/%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+  <!-- DefaultData/data-version.txt: one line per default file with its SHA-256. It changes only when the
+       shipped data changes; the application compares it with the copy in the user's data folder and
+       replaces the data files and sprites when they differ (see AppServices.Initialize). -->
+  <Target Name="ComputeDataVersion">
+    <ItemGroup>
+      <_DefaultDataFile Include="@(Content)" Condition="$([System.String]::Copy('%(Content.Link)').StartsWith('DefaultData'))" />
+    </ItemGroup>
+    <GetFileHash Files="@(_DefaultDataFile)" Algorithm="SHA256">
+      <Output TaskParameter="Items" ItemName="_DefaultDataHash" />
+    </GetFileHash>
+  </Target>
+  <Target Name="WriteDataVersionBuild" AfterTargets="Build" DependsOnTargets="ComputeDataVersion">
+    <WriteLinesToFile File="$(OutDir)DefaultData/data-version.txt" Lines="@(_DefaultDataHash->'%(Link) %(FileHash)')"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+  <Target Name="WriteDataVersionPublish" AfterTargets="Publish" DependsOnTargets="ComputeDataVersion">
+    <WriteLinesToFile File="$(PublishDir)DefaultData/data-version.txt" Lines="@(_DefaultDataHash->'%(Link) %(FileHash)')"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PokemonRpgStudio.Core/PokemonRpgStudio.Core.csproj" />
+  </ItemGroup>
+</Project>
