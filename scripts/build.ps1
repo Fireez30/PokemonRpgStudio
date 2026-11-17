@@ -51,9 +51,12 @@ if (-not $SkipTests) {
 function Publish-App([string]$rid, [string]$outDir) {
     Write-Info "Publishing $rid ($Configuration)"
     if (Test-Path $outDir) { Remove-Item -Recurse -Force -LiteralPath $outDir }
+    # Windows: a plain folder (exe + DLLs). A single-file exe that extracts native libraries at
+    # runtime is a packer-like pattern that Windows Defender often flags as a false positive.
+    $single = if ($rid -like 'win-*') { @('-p:PublishSingleFile=false') }
+              else { @('-p:PublishSingleFile=true', '-p:IncludeNativeLibrariesForSelfExtract=true') }
     & $dotnet publish $AppProject -c $Configuration -r $rid --self-contained true `
-        -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
-        -p:DebugType=None -p:DebugSymbols=false @dataArgs @restoreArgs -o $outDir --nologo -v quiet
+        @single -p:DebugType=None -p:DebugSymbols=false @dataArgs @restoreArgs -o $outDir --nologo -v quiet
     if ($LASTEXITCODE -ne 0) { Fail "dotnet publish failed for $rid." }
     Copy-Item (Join-Path $ProjectRoot 'README.md') $outDir
 }
@@ -62,7 +65,6 @@ if ($Target -in 'windows', 'all') {
     $winDir = Join-Path $DistDir "$AppName-$AppVersion-win-$Arch"
     Publish-App "win-$Arch" $winDir
     Copy-Item (Join-Path $PSScriptRoot 'install.ps1') $winDir
-    Copy-Item (Join-Path $ProjectRoot 'packaging\windows\install.cmd') $winDir
     $zip = "$winDir.zip"
     if (Test-Path $zip) { Remove-Item -Force -LiteralPath $zip }
     Compress-Archive -Path $winDir -DestinationPath $zip
@@ -76,7 +78,7 @@ if ($Target -in 'windows', 'all') {
         if ($LASTEXITCODE -ne 0) { Fail 'Inno Setup failed.' }
         Write-Ok "Installer: dist\$AppName-$AppVersion-win-$Arch-setup.exe"
     } elseif (-not $NoInstaller) {
-        Write-Warn 'Inno Setup not found: skipping the setup .exe (the zip + install.ps1 work without it).'
+        Write-Warn 'Inno Setup not found: no setup .exe built. It is the recommended Windows package (install it from https://jrsoftware.org/isdl.php); the zip + install.ps1 still work.'
     }
 }
 

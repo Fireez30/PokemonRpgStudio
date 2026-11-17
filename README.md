@@ -363,14 +363,20 @@ Release packages are produced by the build scripts in `dist/`.
   or run `./install.sh` from inside an extracted release folder.
 
 ### Windows
-- **Portable**: extract `PokemonRpgStudio-1.2.0-win-x64.zip` and run `PokemonRpgStudio.exe`.
-- **Install** for the current user (Start menu + desktop shortcut + entry in *Installed apps*,
-  no administrator rights): double-click `install.cmd` in the extracted folder, or
+- **Setup wizard** (recommended): `PokemonRpgStudio-1.2.0-win-x64-setup.exe`, built by
+  `scripts\build.ps1` on Windows when Inno Setup 6 is installed. Installs for the current user
+  (Start menu, optional desktop shortcut, entry in *Installed apps*), no administrator rights.
+- **Portable**: extract `PokemonRpgStudio-1.2.0-win-x64.zip` and run `PokemonRpgStudio.exe`
+  (keep it with the DLLs and `DefaultData\` beside it).
+- **Install from the zip** (same result as the wizard): right-click `install.ps1` in the extracted
+  folder → *Run with PowerShell*, or
   ```powershell
   powershell -ExecutionPolicy Bypass -File install.ps1
   powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall
   ```
-- **Setup wizard**: `PokemonRpgStudio-1.2.0-win-x64-setup.exe` (built when Inno Setup 6 is installed).
+
+If Windows Defender or SmartScreen reports the application as a threat, it is a false positive on
+an unsigned executable: report it at https://www.microsoft.com/wdsi/filesubmission.
 
 The packages are self-contained: no .NET runtime needs to be installed.
 

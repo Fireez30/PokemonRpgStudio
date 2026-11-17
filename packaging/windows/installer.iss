@@ -37,7 +37,7 @@ ArchitecturesInstallIn64BitMode=arm64
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "install.ps1,install.cmd"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "install.ps1"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Game data: the files of the user's data folder are replaced by the package's ones on every install
 ; (sprites the user added are kept). Sheets, teams, zones and settings.json are never touched, and

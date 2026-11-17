@@ -4,7 +4,8 @@
 # Usage: ./scripts/build.sh [targets...] [options]
 #   targets   linux     self-contained Linux executable (folder + .tar.gz)
 #             appimage  Linux AppImage (run ./scripts/setup.sh first for appimagetool)
-#             windows   self-contained Windows executable (folder + .zip), cross-compiled
+#             windows   self-contained Windows folder (exe + DLLs, .zip), cross-compiled;
+#                       the setup .exe needs Inno Setup, i.e. scripts\build.ps1 on Windows
 #             all       linux + appimage + windows (default)
 #   options   --arch x64|arm64   CPU architecture (default: this machine)
 #             --skip-tests       don't run the unit tests first
@@ -57,9 +58,12 @@ fi
 publish() { # rid output_dir
     info "Publishing $1 ($CONFIG)"
     [[ -e "$2" ]] && clean_dist_dir "$2"
+    # Windows: a plain folder (exe + DLLs). A single-file exe that extracts native libraries at
+    # runtime is a packer-like pattern that Windows Defender often flags as a false positive.
+    local single=(-p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true)
+    [[ "$1" == win-* ]] && single=(-p:PublishSingleFile=false)
     "$DOTNET" publish "$APP_PROJECT" -c "$CONFIG" -r "$1" --self-contained true \
-        -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
-        -p:DebugType=None -p:DebugSymbols=false "${MSBUILD_DATA_ARGS[@]}" "${RESTORE_ARGS[@]}" \
+        "${single[@]}" -p:DebugType=None -p:DebugSymbols=false "${MSBUILD_DATA_ARGS[@]}" "${RESTORE_ARGS[@]}" \
         -o "$2" --nologo -v quiet
     cp "$PROJECT_ROOT/README.md" "$2/README.md"
 }
@@ -134,7 +138,6 @@ if has_target windows; then
     WIN_DIR="$DIST_DIR/$APP_NAME-$APP_VERSION-win-$RID_ARCH"
     publish "win-$RID_ARCH" "$WIN_DIR"
     cp "$SCRIPT_DIR/install.ps1" "$WIN_DIR/install.ps1"
-    cp "$PROJECT_ROOT/packaging/windows/install.cmd" "$WIN_DIR/install.cmd"
     make_zip "$WIN_DIR" "$WIN_DIR.zip"
     ok "Windows build: dist/$(basename "$WIN_DIR")/ and dist/$(basename "$WIN_DIR").zip"
 fi
