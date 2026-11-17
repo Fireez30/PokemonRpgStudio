@@ -6,6 +6,8 @@
 #             appimage  Linux AppImage (run ./scripts/setup.sh first for appimagetool)
 #             windows   self-contained Windows folder (exe + DLLs, .zip), cross-compiled;
 #                       the setup .exe needs Inno Setup, i.e. scripts\build.ps1 on Windows
+#             android   Android APK for phones, tablets and foldables (arm64 + x64);
+#                       run ./scripts/setup.sh --android first. Not part of "all".
 #             all       linux + appimage + windows (default)
 #   options   --arch x64|arm64   CPU architecture (default: this machine)
 #             --skip-tests       don't run the unit tests first
@@ -20,13 +22,13 @@ OFFLINE=0
 CONFIG="Release"
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        linux|appimage|windows) TARGETS+=("$1") ;;
+        linux|appimage|windows|android) TARGETS+=("$1") ;;
         all) TARGETS+=(linux appimage windows) ;;
         --arch) ARCH="${2:-}"; shift ;;
         --skip-tests) RUN_TESTS=0 ;;
         --offline) OFFLINE=1 ;;
         --debug) CONFIG="Debug" ;;
-        -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
         *) die "Unknown argument: $1 (see --help)" ;;
     esac
     shift
@@ -140,6 +142,36 @@ if has_target windows; then
     cp "$SCRIPT_DIR/install.ps1" "$WIN_DIR/install.ps1"
     make_zip "$WIN_DIR" "$WIN_DIR.zip"
     ok "Windows build: dist/$(basename "$WIN_DIR")/ and dist/$(basename "$WIN_DIR").zip"
+fi
+
+if has_target android; then
+    require_android_toolchain
+    APK="$DIST_DIR/$APP_NAME-$APP_VERSION-android.apk"
+    APK_OUT="$DIST_DIR/android-build"
+    [[ -e "$APK_OUT" ]] && clean_dist_dir "$APK_OUT"
+    # Signing: set ANDROID_KEYSTORE (+ ANDROID_KEYSTORE_PASS, ANDROID_KEY_ALIAS) to sign with your own key, so
+    # that updates install over the previous version. Without it, the build signs with the .NET Android debug
+    # key (~/.local/share/Xamarin/Mono for Android/debug.keystore on this machine): fine for your own devices,
+    # but keep that file, as an APK signed with another key can only be installed after uninstalling the app.
+    SIGN_ARGS=()
+    if [[ -n "${ANDROID_KEYSTORE:-}" ]]; then
+        [[ -f "$ANDROID_KEYSTORE" ]] || die "ANDROID_KEYSTORE not found: $ANDROID_KEYSTORE"
+        [[ -n "${ANDROID_KEYSTORE_PASS:-}" ]] || die "Set ANDROID_KEYSTORE_PASS with ANDROID_KEYSTORE"
+        SIGN_ARGS=(-p:AndroidKeyStore=true "-p:AndroidSigningKeyStore=$ANDROID_KEYSTORE"
+                   "-p:AndroidSigningKeyAlias=${ANDROID_KEY_ALIAS:-pokemonrpgstudio}"
+                   "-p:AndroidSigningStorePass=env:ANDROID_KEYSTORE_PASS" "-p:AndroidSigningKeyPass=env:ANDROID_KEYSTORE_PASS")
+        info "Signing with $ANDROID_KEYSTORE"
+    fi
+    info "Building the Android APK ($CONFIG)"
+    "$DOTNET" publish "$ANDROID_PROJECT" -c "$CONFIG" -f net10.0-android \
+        "${ANDROID_MSBUILD_ARGS[@]}" "${MSBUILD_DATA_ARGS[@]}" "${RESTORE_ARGS[@]}" "${SIGN_ARGS[@]}" \
+        -o "$APK_OUT" --nologo -v quiet
+    signed="$(find "$APK_OUT" -maxdepth 1 -name '*-Signed.apk' | head -n1)"
+    [[ -n "$signed" ]] || die "No signed APK produced in $APK_OUT"
+    [[ -e "$APK" ]] && clean_dist_dir "$APK"
+    mv "$signed" "$APK"
+    clean_dist_dir "$APK_OUT"
+    ok "Android APK: dist/$(basename "$APK") ($(du -h "$APK" | cut -f1))"
 fi
 
 ok "Done. Packages are in $DIST_DIR"

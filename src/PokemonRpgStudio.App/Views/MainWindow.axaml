@@ -9,53 +9,6 @@
         Width="1440" Height="900" MinWidth="980" MinHeight="620"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource PageBackground}">
-  <!-- Window-level so the pages shown inside a section (Sheets, Tools) find their view too. -->
-  <Window.DataTemplates>
-    <DataTemplate DataType="vm:SectionViewModel"><views:SectionView /></DataTemplate>
-    <DataTemplate DataType="vm:SheetsViewModel"><views:SheetsView /></DataTemplate>
-    <DataTemplate DataType="vm:SheetDatabaseViewModel"><views:SheetDatabaseView /></DataTemplate>
-    <DataTemplate DataType="vm:SheetEditorViewModel"><views:SheetEditorView /></DataTemplate>
-    <DataTemplate DataType="vm:PokedexViewModel"><views:PokedexView /></DataTemplate>
-    <DataTemplate DataType="vm:MovesViewModel"><views:MovesView /></DataTemplate>
-    <DataTemplate DataType="vm:AbilitiesViewModel"><views:AbilitiesView /></DataTemplate>
-    <DataTemplate DataType="vm:TeamsViewModel"><ContentControl Content="{Binding CurrentView}" /></DataTemplate>
-    <DataTemplate DataType="vm:TeamManagerViewModel"><views:TeamManagerView /></DataTemplate>
-    <DataTemplate DataType="vm:TeamCardViewModel"><views:TeamCardView /></DataTemplate>
-    <DataTemplate DataType="vm:EncounterViewModel"><views:EncounterView /></DataTemplate>
-    <DataTemplate DataType="vm:DiceViewModel"><views:DiceView /></DataTemplate>
-    <DataTemplate DataType="vm:AnalyzerViewModel"><views:AnalyzerView /></DataTemplate>
-    <DataTemplate DataType="vm:TypeChartViewModel"><views:TypeChartView /></DataTemplate>
-    <DataTemplate DataType="vm:WhiteboardViewModel"><views:WhiteboardView /></DataTemplate>
-    <DataTemplate DataType="vm:ShopViewerViewModel"><views:ShopViewerView /></DataTemplate>
-    <DataTemplate DataType="vm:ShopEditorViewModel"><views:ShopEditorView /></DataTemplate>
-    <DataTemplate DataType="vm:SettingsViewModel"><views:SettingsView /></DataTemplate>
-  </Window.DataTemplates>
-
-  <Grid ColumnDefinitions="220,*">
-    <Border Background="{DynamicResource SidebarBackground}">
-      <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="16,18,16,14" Spacing="10">
-          <Image Source="/Assets/app-icon.png" Width="36" Height="36" />
-          <StackPanel VerticalAlignment="Center">
-            <TextBlock Text="Pokémon RPG" FontWeight="Bold" FontSize="16" />
-            <TextBlock Text="Studio" Classes="muted" FontSize="12" />
-          </StackPanel>
-        </StackPanel>
-        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Version}" Classes="muted" FontSize="11" Margin="18,10" />
-        <ListBox Classes="nav" ItemsSource="{Binding Pages}" SelectedItem="{Binding CurrentPage}">
-          <ListBox.ItemTemplate>
-            <DataTemplate x:DataType="vm:PageViewModel">
-              <StackPanel Orientation="Horizontal" Spacing="12">
-                <TextBlock Text="{Binding Glyph}" Width="20" TextAlignment="Center" FontSize="15" />
-                <TextBlock Text="{Binding Title}" FontSize="14" />
-              </StackPanel>
-            </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
-      </DockPanel>
-    </Border>
-
-    <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
-  </Grid>
+  <!-- The application itself is MainView (shared with Android). -->
+  <views:MainView />
 </Window>
-

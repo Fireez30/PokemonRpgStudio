@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
              x:Class="PokemonRpgStudio.App.Views.SectionView"
              x:DataType="vm:SectionViewModel">
   <UserControl.Styles>
@@ -43,6 +44,6 @@
         </ListBox>
       </StackPanel>
     </Border>
-    <ContentControl Content="{Binding CurrentView}" />
+    <views:PageHost Content="{Binding CurrentView}" />
   </DockPanel>
 </UserControl>

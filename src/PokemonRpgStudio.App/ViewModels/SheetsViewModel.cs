@@ -444,20 +444,31 @@ public sealed partial class SheetsViewModel : PageViewModel
         _notesTimer.Tick += (_, _) => FlushNotes();
         CustomStats = new (string Key, string Label)[] { ("HP", "HP"), ("ATK", "ATK"), ("DEF", "DEF"), ("SPATK", "SP.ATK"), ("SPDEF", "SP.DEF"), ("SPD", "SPEED") }
             .Select(x => new CustomStatOption(x.Key, x.Label, UpdateCustomStatsSummary)).ToList();
-        services.LibraryChanged += () => { ReloadLibrary(); ReloadTeams(); };
+        services.LibraryChanged += () => { ReloadLibrary(); ReloadTeams(); _diskWatch.MarkSeen(); };
         services.GameDataChanged += () => { if (_record != null) Show(_record); };
+        _diskWatch = new DiskChangeWatch(() => services.Library.Sheets.Directory, () => services.Library.Teams.Directory);
         ReloadLibrary();
         ReloadTeams();
+        _diskWatch.MarkSeen();
     }
 
-    public override void OnDeactivated() => FlushNotes();
+    /// <summary>Sheets and teams as last read: they are only re-read when they changed.</summary>
+    private readonly DiskChangeWatch _diskWatch;
+
+    public override void OnDeactivated()
+    {
+        FlushNotes();
+        _diskWatch.MarkSeen(); // this page's own saves (HP, notes…) are already shown
+    }
 
     public override void OnActivated()
     {
+        if (!_diskWatch.HasChanged) return;
         ReloadLibrary();
         ReloadTeams();
         // The editor may have changed the sheet: show the latest version.
         if (_record != null && _services.Library.Sheets.Get(_record.Id) is { } fresh) Show(fresh);
+        _diskWatch.MarkSeen();
     }
 
     partial void OnTeamsChanged(IReadOnlyList<TeamRecord> value) => OnPropertyChanged(nameof(HasNoTeams));
@@ -705,7 +716,11 @@ public sealed partial class SheetsViewModel : PageViewModel
     /// <summary>Shows a sheet by id (after the editor closes).</summary>
     public void Select(string? id)
     {
-        ReloadLibrary();
+        if (_diskWatch.HasChanged)
+        {
+            ReloadLibrary();
+            _diskWatch.MarkSeen();
+        }
         if (id is null) return;
         var item = FilteredSheets.FirstOrDefault(s => s.Id == id);
         if (item is null)
@@ -1439,9 +1454,9 @@ public sealed partial class SheetsViewModel : PageViewModel
     private async Task ExportMarkdown()
     {
         if (ExportSnapshot() is not { } snap) return;
-        var path = await _services.Dialogs.SaveFileAsync("Export sheet as Markdown", FileBaseName() + ".md", DialogService.MarkdownFiles);
-        if (path is null) return;
-        await File.WriteAllTextAsync(path, SheetExporter.ToMarkdown(snap, _services.Settings.ImageBaseUrl));
+        var markdown = SheetExporter.ToMarkdown(snap, _services.Settings.ImageBaseUrl);
+        if (!await _services.Dialogs.SaveFileAsync("Export sheet as Markdown", FileBaseName() + ".md", DialogService.MarkdownFiles,
+                path => File.WriteAllTextAsync(path, markdown))) return;
         _services.Dialogs.Notify("Markdown exported.");
     }
 
@@ -1449,9 +1464,9 @@ public sealed partial class SheetsViewModel : PageViewModel
     private async Task ExportHtml()
     {
         if (ExportSnapshot() is not { } snap) return;
-        var path = await _services.Dialogs.SaveFileAsync("Export sheet as HTML", FileBaseName() + ".html", DialogService.HtmlFiles);
-        if (path is null) return;
-        await File.WriteAllTextAsync(path, SheetExporter.ToHtmlDocument(snap, _services.Settings.ImageBaseUrl));
+        var html = SheetExporter.ToHtmlDocument(snap, _services.Settings.ImageBaseUrl);
+        if (!await _services.Dialogs.SaveFileAsync("Export sheet as HTML", FileBaseName() + ".html", DialogService.HtmlFiles,
+                path => File.WriteAllTextAsync(path, html))) return;
         _services.Dialogs.Notify("HTML exported.");
     }
 
@@ -1459,10 +1474,10 @@ public sealed partial class SheetsViewModel : PageViewModel
     private async Task ExportJson()
     {
         if (_record is null) return;
-        var path = await _services.Dialogs.SaveFileAsync("Export sheet file", FileBaseName() + ".json", DialogService.JsonFiles);
-        if (path is null) return;
         var record = _services.Library.Sheets.Get(_record.Id) ?? _record;
-        await File.WriteAllTextAsync(path, JsonSerializer.Serialize(record, JsonDefaults.Options));
+        var json = JsonSerializer.Serialize(record, JsonDefaults.Options);
+        if (!await _services.Dialogs.SaveFileAsync("Export sheet file", FileBaseName() + ".json", DialogService.JsonFiles,
+                path => File.WriteAllTextAsync(path, json))) return;
         _services.Dialogs.Notify("Sheet file exported.");
     }
 

@@ -136,10 +136,15 @@ public sealed partial class SheetDatabaseViewModel : PageViewModel
 
     public override void OnActivated()
     {
-        // Play tracking (HP) and edits don't raise LibraryChanged: always re-read when shown.
+        // Play tracking (HP) and edits don't raise LibraryChanged: re-read when the files changed.
+        if (!_diskWatch.HasChanged) return;
         _dirty = true;
         Reload();
+        _diskWatch.MarkSeen();
     }
+
+    private DiskChangeWatch _diskWatch => _diskWatchField ??= new(() => _services.Library.Sheets.Directory);
+    private DiskChangeWatch? _diskWatchField;
 
     private void Reload()
     {

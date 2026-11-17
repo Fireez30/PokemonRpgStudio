@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
              xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
              xmlns:c="using:PokemonRpgStudio.App.Controls"
              x:Class="PokemonRpgStudio.App.Views.ShopViewerView"
@@ -19,7 +20,7 @@
     </Style>
   </UserControl.Styles>
 
-  <Grid ColumnDefinitions="260,*">
+  <Grid ColumnDefinitions="260,*" views:Adaptive.DrawerBelow="560">
     <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
       <DockPanel Margin="14,20,14,14">
         <TextBlock DockPanel.Dock="Top" Classes="page-title" Text="Shops" FontSize="22" />
@@ -73,6 +74,8 @@
                     </Panel>
                   </Border>
                   <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Classes="muted" FontSize="12" Text="{Binding Effect}" IsVisible="{Binding HasEffect}"
+                             TextWrapping="Wrap" MaxLines="4" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Effect}" />
                   <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="{Binding PriceText}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentText}" />
                     <TextBlock Grid.Column="1" Classes="muted" FontSize="12" Text="{Binding StockText}" VerticalAlignment="Center" />

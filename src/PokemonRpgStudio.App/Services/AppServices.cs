@@ -62,11 +62,13 @@ public sealed class AppServices
     /// </summary>
     public static IReadOnlyList<string> DefaultDataDirs()
     {
-        var dirs = new List<string>
+        var dirs = new List<string>();
+        if (_providedDefaultDir != null) dirs.Add(_providedDefaultDir);
+        dirs.AddRange(new[]
         {
             Path.Combine(AppContext.BaseDirectory, "DefaultData"),
             Path.Combine(AppContext.BaseDirectory, "PokemonRpgStudio-data"),
-        };
+        });
         // Inside an AppImage, AppContext.BaseDirectory is the read-only mount: look beside the .AppImage file.
         if (Environment.GetEnvironmentVariable("APPIMAGE") is { Length: > 0 } appImage && Path.GetDirectoryName(appImage) is { } dir)
         {
@@ -79,13 +81,37 @@ public sealed class AppServices
     public static IReadOnlyList<string> DefaultImageDirs() =>
         DefaultDataDirs().Select(d => Path.Combine(d, "images")).Where(Directory.Exists).ToList();
 
-    public static bool HasDefaultData => DefaultDataDirs().Any(d => GameData.FileNames.All(f => File.Exists(Path.Combine(d, f))));
+    public static bool HasDefaultData => DefaultDataProvider != null || DefaultDataDirs().Any(d => GameData.FileNames.All(f => File.Exists(Path.Combine(d, f))));
+
+    /// <summary>
+    /// Platform hook for defaults that are not plain files next to the application (Android: APK assets).
+    /// Called with <c>force</c> = false at start (return null when the data folder is up to date) and true
+    /// to restore the defaults; returns a temporary folder holding them, deleted once they are copied.
+    /// </summary>
+    public static Func<bool, string?>? DefaultDataProvider { get; set; }
+
+    private static string? _providedDefaultDir;
+
+    private static T WithProvidedDefaults<T>(bool force, Func<T> action)
+    {
+        if (DefaultDataProvider is null) return action();
+        _providedDefaultDir = DefaultDataProvider(force);
+        try { return action(); }
+        finally
+        {
+            try { if (_providedDefaultDir != null) Directory.Delete(_providedDefaultDir, recursive: true); }
+            catch (Exception) { /* temporary folder: the system clears it */ }
+            _providedDefaultDir = null;
+        }
+    }
 
     /// <summary>
     /// Fills the data folder with the default files that are missing, then loads it.
     /// </summary>
     /// <exception cref="MissingDataException">Files are still missing (no defaults found).</exception>
-    public static AppServices Initialize()
+    public static AppServices Initialize() => WithProvidedDefaults(force: false, InitializeCore);
+
+    private static AppServices InitializeCore()
     {
         var paths = AppPaths.Default();
         var library = new UserLibrary(paths);
@@ -176,7 +202,9 @@ public sealed class AppServices
     }
 
     /// <summary>Overwrites the data files and the sprites with the defaults shipped with the application.</summary>
-    public List<string> RestoreDefaultData()
+    public List<string> RestoreDefaultData() => WithProvidedDefaults(force: true, RestoreDefaultDataCore);
+
+    private List<string> RestoreDefaultDataCore()
     {
         var copied = GameData.SeedDataFolder(DataDir, DefaultDataDirs(), overwrite: true);
         var stamp = DefaultDataDirs().Select(d => Path.Combine(d, DataVersionFile)).FirstOrDefault(File.Exists);

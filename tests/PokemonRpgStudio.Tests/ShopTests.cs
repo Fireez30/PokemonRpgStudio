@@ -29,6 +29,35 @@ public class ShopTests : IDisposable
     }
 
     [Fact]
+    public void Old_files_without_effect_load_and_are_upgraded()
+    {
+        var store = NewStore("old");
+        Directory.CreateDirectory(store.Directory);
+        File.WriteAllText(store.ShopsFile, """{"version":1,"shops":[{"id":"a","name":"Mart","items":[{"name":"Potion","quantity":5,"price":300}]}]}""");
+
+        var item = Assert.Single(Assert.Single(store.Load().Shops).Items);
+        Assert.Equal("", item.Effect);
+        var saved = File.ReadAllText(store.ShopsFile);
+        Assert.Contains("\"Effect\"", saved);
+        Assert.Contains($"\"Version\": {ShopBook.CurrentVersion}", saved);
+    }
+
+    [Fact]
+    public void Effect_survives_save_export_and_import()
+    {
+        var store = NewStore("fx");
+        var book = new ShopBook();
+        book.Shops.Add(new Shop { Name = "Mart", Items = { new ShopItem { Name = "Potion", Quantity = 1, Price = 300, Effect = "Heals 20 HP." } } });
+        store.Save(book);
+        Assert.Equal("Heals 20 HP.", store.Load().Shops[0].Items[0].Effect);
+
+        var imported = store.Import(store.Export(book.Shops), "x", null, new List<string>());
+        Assert.Equal("Heals 20 HP.", imported[0].Items[0].Effect);
+        var noEffect = store.Import("""[{"name":"Ball","quantity":1,"price":200}]""", "x", null, new List<string>());
+        Assert.Equal("", noEffect[0].Items[0].Effect);
+    }
+
+    [Fact]
     public void Normalize_fixes_negative_values_and_duplicate_ids()
     {
         var book = ShopBook.FromJson("""{"shops":[{"id":"x","items":[{"name":"A","quantity":-2,"price":-1}]},{"id":"x"}]}""");

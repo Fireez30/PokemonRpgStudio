@@ -6,6 +6,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="$(cd "$PROJECT_ROOT/.." && pwd)"
 APP_PROJECT="$PROJECT_ROOT/src/PokemonRpgStudio.App/PokemonRpgStudio.App.csproj"
+ANDROID_PROJECT="$PROJECT_ROOT/src/PokemonRpgStudio.Android/PokemonRpgStudio.Android.csproj"
+# Android toolchain installed by ./scripts/setup.sh --android (JDK and Android SDK in ./tools)
+ANDROID_JDK_DIR="$PROJECT_ROOT/tools/jdk"
+ANDROID_SDK_DIR="$PROJECT_ROOT/tools/android-sdk"
 TEST_PROJECT="$PROJECT_ROOT/tests/PokemonRpgStudio.Tests/PokemonRpgStudio.Tests.csproj"
 DIST_DIR="$PROJECT_ROOT/dist"
 TOOLS_DIR="$PROJECT_ROOT/tools"
@@ -77,4 +81,20 @@ clean_dist_dir() {
         "$(readlink -m "$DIST_DIR")"/*) rm -rf -- "${target:?}" ;;
         *) die "Refusing to delete outside dist/: $target" ;;
     esac
+}
+
+# Java and Android SDK for the APK: $JAVA_HOME / $ANDROID_HOME when set, otherwise the copies in ./tools.
+find_android_toolchain() {
+    ANDROID_JAVA="${JAVA_HOME:-}"
+    [[ -n "$ANDROID_JAVA" && -x "$ANDROID_JAVA/bin/javac" ]] || ANDROID_JAVA="$ANDROID_JDK_DIR"
+    ANDROID_SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+    [[ -n "$ANDROID_SDK" && -d "$ANDROID_SDK/platforms" ]] || ANDROID_SDK="$ANDROID_SDK_DIR"
+    [[ -x "$ANDROID_JAVA/bin/javac" && -d "$ANDROID_SDK/platforms" ]]
+}
+
+require_android_toolchain() {
+    "$DOTNET" workload list 2>/dev/null | grep -q '^android ' \
+        || die "The .NET Android workload is missing. Run ./scripts/setup.sh --android first."
+    find_android_toolchain || die "JDK / Android SDK not found. Run ./scripts/setup.sh --android first."
+    ANDROID_MSBUILD_ARGS=("-p:JavaSdkDirectory=$ANDROID_JAVA" "-p:AndroidSdkDirectory=$ANDROID_SDK")
 }

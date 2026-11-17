@@ -30,7 +30,14 @@ public sealed class ShopStore
     {
         try
         {
-            if (File.Exists(ShopsFile)) return ShopBook.FromJson(File.ReadAllText(ShopsFile));
+            if (File.Exists(ShopsFile))
+            {
+                var text = File.ReadAllText(ShopsFile);
+                var book = ShopBook.FromJson(text);
+                // Older file (no "effect" field, previous version...) or fixed by Normalize: rewrite it in the current format.
+                if (book.ToJson() != text) TryUpgrade(book);
+                return book;
+            }
         }
         catch (Exception)
         {
@@ -38,6 +45,11 @@ public sealed class ShopStore
             try { File.Copy(ShopsFile, ShopsFile + ".broken", overwrite: true); } catch (Exception) { /* best effort */ }
         }
         return new ShopBook().Normalize();
+    }
+
+    private void TryUpgrade(ShopBook book)
+    {
+        try { Save(book); } catch (Exception) { /* read-only folder: the file is upgraded at the next save */ }
     }
 
     public void Save(ShopBook book)
@@ -169,6 +181,7 @@ public sealed class ShopStore
                     Quantity = (int)Math.Clamp(Math.Floor(item.Quantity!.Value), 0, int.MaxValue),
                     Price = Math.Max(0, item.Price!.Value),
                     Picture = picture,
+                    Effect = item.Effect?.Trim() ?? "",
                 });
             }
             result.Add(shop);
@@ -235,5 +248,6 @@ public sealed class ShopStore
         public decimal? Quantity { get; set; }
         public decimal? Price { get; set; }
         public string? Picture { get; set; }
+        public string? Effect { get; set; }
     }
 }

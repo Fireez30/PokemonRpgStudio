@@ -29,7 +29,7 @@ server: **sheets are saved on your computer and can be reopened and edited at an
 | **Teams** | Pokemon Team Manager | Group up to six saved sheets into a team and export a PNG team card. |
 | ↳ Team Card | Pokemon Team Card | Opened with the *Card for any team…* button: build a card for any team (rivals, NPCs…) without saving anything. |
 | **Encounters** | Pokemon Encounter Generator | Build zones by rarity (sorted in folders), roll Pokémon and encounter counts. |
-| **Shops** | — | Stock of your marts and merchants: items with a name, quantity, price and optional picture; JSON export / import. Two views: |
+| **Shops** | — | Stock of your marts and merchants: items with a name, quantity, price, optional picture and effect; JSON export / import. Two views: |
 | ↳ Shop view | — | The selected shop's items as cards (picture, price, stock; sold-out items greyed). |
 | ↳ Edit | — | Create, rename, duplicate, delete, import and export shops, and edit their items. |
 | **Tools** | — | Four tools, one at a time, switched at the top of the page: |
@@ -189,7 +189,8 @@ The stock of the marts and merchants of your game, in its own section of the sid
 - **Shop view** shows the selected shop like a catalogue: one card per item with its picture, price and
   stock (sold-out items are greyed). **Edit this shop** opens the edit view on the same shop.
 - **Edit**: any number of shops, listed on the left: **+ New shop**, rename, **Duplicate**, **Delete**.
-- Each item has a **name**, a **quantity** and a **price** (all required) and an optional **picture**
+- Each item has a **name**, a **quantity** and a **price** (all required), an optional **effect** (free
+  text, shown on the item's card) and an optional **picture**
   (click the picture square; the file is copied into the shops folder). The header sums the items,
   the units in stock and the stock value.
 - **Export shop…** / **Export all…** write a `.json` file with the pictures embedded, so it can be
@@ -200,7 +201,7 @@ The stock of the marts and merchants of your game, in its own section of the sid
 ```json
 { "name": "Pewter Mart", "items": [
   { "name": "Potion", "quantity": 10, "price": 300 },
-  { "name": "Poké Ball", "quantity": 5, "price": 200, "picture": "data:image/png;base64,…" }
+  { "name": "Poké Ball", "quantity": 5, "price": 200, "effect": "Catches a wild Pokémon.", "picture": "data:image/png;base64,…" }
 ] }
 ```
 
@@ -240,6 +241,7 @@ All the rules live in `src/PokemonRpgStudio.Core/Rules/SheetRules.cs` and are co
 |----------|--------|
 | Linux | `~/.local/share/PokemonRpgStudio/` |
 | Windows | `%LOCALAPPDATA%\PokemonRpgStudio\` |
+| Android | the app's private storage (removed when the app is uninstalled: export what you want to keep) |
 
 ```
 PokemonRpgStudio/
@@ -375,6 +377,28 @@ Release packages are produced by the build scripts in `dist/`.
   powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall
   ```
 
+### Android (phones, tablets, foldables)
+- **APK**: `PokemonRpgStudio-<v>-android.apk` (≈ 145 MB, game data included), for Android 7.0 or newer
+  (arm64 phones and tablets, x86_64 emulators / Chromebooks). Copy it to the device and open it; allow
+  *Install unknown apps* for the app you open it with (Files, browser…) when Android asks. Or, with USB
+  debugging enabled: `tools/android-sdk/platform-tools/adb install -r dist/PokemonRpgStudio-<v>-android.apk`.
+- The first start copies the game data and sprites into the app's storage (a few seconds); updates that
+  bring new data refresh it, like on the desktop.
+- The layout adapts to the width of the screen, and follows it live when a foldable is folded / unfolded,
+  rotated or used in split screen:
+  - **narrow** (phone, folded foldable): a top bar with a ☰ menu; list + details pages show the details
+    full width, and the list (sheets, teams, zones, shops) slides in from the left with the round button
+    in the bottom-left corner; the roll log of a sheet slides in from the right (🎲 button); cards and
+    toolbars stack, and wide tables scroll sideways;
+  - **medium** (unfolded foldable, small tablet): an icon rail on the left; ☰ shows the page names;
+  - **wide** (tablet in landscape, large unfolded screen, desktop): the usual sidebar.
+- The back button / gesture closes the dialog or menu that is open, then goes back to the Sheets page.
+- Import and export use the Android file picker (Downloads, Drive, …). Your sheets, teams and zones stay in
+  the app's private storage: back them up with the export buttons before uninstalling the app.
+- Updates: install the new APK over the old one. It must be signed with the same key (see
+  [Android APK](#android-apk)), otherwise Android refuses it and the app must be uninstalled first
+  (which deletes its data).
+
 If Windows Defender or SmartScreen reports the application as a threat, it is a false positive on
 an unsigned executable: report it at https://www.microsoft.com/wdsi/filesubmission.
 
@@ -403,6 +427,26 @@ powershell -ExecutionPolicy Bypass -File scripts\build.ps1           # tests + W
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 ```
 
+### Android APK
+```bash
+./scripts/setup.sh --android     # .NET Android workload, JDK 17 (tools/jdk), Android SDK (tools/android-sdk)
+./scripts/build.sh android       # tests + dist/PokemonRpgStudio-<v>-android.apk
+```
+`android` is not part of the default `all` target. The APK project (`src/PokemonRpgStudio.Android`)
+compiles the views, view models and services of `src/PokemonRpgStudio.App`, so the desktop and Android
+applications are the same code. Set `JAVA_HOME` / `ANDROID_HOME` to use a JDK / Android SDK you already have.
+
+**Signing**: without settings, the APK is signed with the .NET Android debug key
+(`~/.local/share/Xamarin/Mono for Android/debug.keystore`), which is fine for your own devices as long as
+you keep that file. To sign with your own key:
+```bash
+keytool -genkeypair -v -keystore ~/pokemonrpgstudio.keystore -alias pokemonrpgstudio \
+        -keyalg RSA -keysize 4096 -validity 10000     # once (keytool is in tools/jdk/bin)
+ANDROID_KEYSTORE=~/pokemonrpgstudio.keystore ANDROID_KEYSTORE_PASS=… ./scripts/build.sh android
+```
+`ANDROID_KEY_ALIAS` sets the alias (default `pokemonrpgstudio`). The version code (`1.2.3` → `10203`)
+comes from `<Version>`, so each release installs over the previous one.
+
 ### During development
 ```bash
 dotnet run --project src/PokemonRpgStudio.App      # run the app
@@ -415,8 +459,8 @@ dotnet test                                          # run the unit tests
 
 | Script | Options | Result |
 |--------|---------|--------|
-| `scripts/setup.sh` | `--no-appimage`, `--force-dotnet` | .NET 10 SDK, NuGet restore, `tools/appimagetool-*.AppImage` |
-| `scripts/build.sh` | targets `linux` `appimage` `windows` `all` (default); `--arch x64\|arm64`, `--skip-tests`, `--offline`, `--debug` | `dist/PokemonRpgStudio-<v>-linux-<arch>/` + `.tar.gz`, `dist/PokemonRpgStudio-<v>-<arch>.AppImage` (data included), `dist/PokemonRpgStudio-<v>-win-<arch>/` + `.zip` |
+| `scripts/setup.sh` | `--no-appimage`, `--force-dotnet`, `--android` | .NET 10 SDK, NuGet restore, `tools/appimagetool-*.AppImage`; with `--android`: .NET Android workload, `tools/jdk`, `tools/android-sdk` |
+| `scripts/build.sh` | targets `linux` `appimage` `windows` `android` `all` (default: linux + appimage + windows); `--arch x64\|arm64`, `--skip-tests`, `--offline`, `--debug` | `dist/PokemonRpgStudio-<v>-linux-<arch>/` + `.tar.gz`, `dist/PokemonRpgStudio-<v>-<arch>.AppImage` (data included), `dist/PokemonRpgStudio-<v>-win-<arch>/` + `.zip`, `dist/PokemonRpgStudio-<v>-android.apk` |
 | `scripts/install.sh` | `--appimage FILE`, `--folder DIR`, `--system`, `--keep-data`, `--uninstall` | `~/.local/opt/pokemon-rpg-studio`, `~/.local/bin/pokemon-rpg-studio`, menu entry and icon, data files in `~/.local/share/PokemonRpgStudio/data/` |
 | `scripts/setup.ps1` | `-ForceDotnet` | .NET 10 SDK (per user), NuGet restore, Inno Setup check |
 | `scripts/build.ps1` | `-Target windows\|linux\|all`, `-Arch x64\|arm64`, `-SkipTests`, `-Offline`, `-NoInstaller` | `dist\PokemonRpgStudio-<v>-win-<arch>\` + `.zip` (+ `-setup.exe` with Inno Setup) |
@@ -442,10 +486,11 @@ PokemonRpgStudio/
 │   │   ├── Rules/                    SheetRules, Dice, PokedexHelpers (evolutions, mega, analyzer)
 │   │   ├── Export/                   Markdown / HTML / Google Docs export
 │   │   └── Storage/                  JSON files, settings, website importer
-│   └── PokemonRpgStudio.App/         Avalonia desktop application (MVVM)
-│       ├── ViewModels/  Views/       one pair per page
-│       ├── Services/                 dialogs & clipboard, team card renderer, bitmap cache
-│       └── Controls/                 type / class badges, converters
+│   ├── PokemonRpgStudio.App/         Avalonia application (MVVM), desktop entry point
+│   │   ├── ViewModels/  Views/       one pair per page; MainView = navigation (adaptive), Adaptive = narrow-screen layouts
+│   │   ├── Services/                 dialogs & clipboard, file pickers, team card renderer, bitmap cache
+│   │   └── Controls/                 type / class badges, converters
+│   └── PokemonRpgStudio.Android/     Android head (APK): activity, bundled data; compiles the App sources
 ├── tests/PokemonRpgStudio.Tests/     xUnit tests (rules, dice, storage, full-database checks)
 ├── packaging/                        AppImage files, .desktop entry, Windows installer
 ├── scripts/                          setup / build / install scripts (Linux .sh, Windows .ps1)
@@ -458,6 +503,9 @@ PokemonRpgStudio/
 
 ### Unreleased
 **New**
+- **Android app** (`./scripts/build.sh android`): an APK for phones, tablets and foldables, with the game data
+  included. The layout adapts to the screen width (phone, unfolded foldable, tablet / desktop) and follows
+  folding, rotation and split screen live.
 - Sheets and Pokédex show the damage taken from each type (weaknesses, resistances, immunities).
 - The application updates the data folder by itself when the data it ships changes (`data-version.txt`).
 - **Whiteboard** in Tools: free drawing, lines, arrows, rectangles, ellipses, texts, images and Pokémon
@@ -467,6 +515,9 @@ PokemonRpgStudio/
 - Zones can be sorted in folders, like sheets.
 
 **Changed**
+- Narrow windows: the sidebar becomes an icon rail or a menu, list + details pages turn the list into a
+  drawer, side-by-side cards stack and wide tables scroll sideways (desktop windows keep their minimum size,
+  so the desktop layout is unchanged).
 - The sidebar is shorter: **Sheets** now holds the list view (previously Sheets) and the database
   view (previously Sheet list), and **Tools** holds Dice Rolls, Type Chart, Analyzer and Whiteboard.
   **Encounters** has its own page in the sidebar.

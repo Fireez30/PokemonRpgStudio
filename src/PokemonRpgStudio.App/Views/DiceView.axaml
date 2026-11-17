@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
              xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
              x:Class="PokemonRpgStudio.App.Views.DiceView"
              x:DataType="vm:DiceViewModel">
@@ -33,7 +34,7 @@
       <TextBlock Classes="page-title" Text="Dice Rolls" />
       <TextBlock Classes="page-subtitle" Text="Dice rolls for encounters, captures, shiny pulls, card drops and free expressions. Your shiny number, card numbers and Dexnav values are remembered." />
 
-      <Grid ColumnDefinitions="*,12,*">
+      <Grid ColumnDefinitions="*,12,*" views:Adaptive.StackBelow="560">
         <Border Classes="card">
           <StackPanel Spacing="10">
             <TextBlock Classes="section-title" Text="Encounter rolls" />
@@ -67,7 +68,7 @@
           <TextBlock Classes="section-title" Text="Expression roller" />
           <TextBlock Classes="muted" Text="Formulas like 2d6+1d8+3, (1d20+5)*2. Press Enter to roll." />
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBox Width="280" Text="{Binding Expression}" Watermark="2d6+1d8+4">
+            <TextBox views:Adaptive.FillUpTo="280" Text="{Binding Expression}" Watermark="2d6+1d8+4">
               <TextBox.KeyBindings>
                 <KeyBinding Gesture="Enter" Command="{Binding RollExpressionCommand}" />
               </TextBox.KeyBindings>

@@ -88,9 +88,9 @@ public abstract partial class TeamCardPageBase : PageViewModel
         RenderNow();
         if (Preview is null) return;
         var name = ImageResolver.NormalizeBaseName(string.IsNullOrWhiteSpace(TeamName) ? TeamCardRenderer.DefaultTeamName : TeamName);
-        var path = await Services.Dialogs.SaveFileAsync("Export team card", (name.Length == 0 ? "pokemon_team_card" : name) + ".png", DialogService.PngFiles);
-        if (path is null) return;
-        Preview.Save(path);
+        var preview = Preview;
+        if (!await Services.Dialogs.SaveFileAsync("Export team card", (name.Length == 0 ? "pokemon_team_card" : name) + ".png", DialogService.PngFiles,
+                path => preview.Save(path))) return;
         Services.Dialogs.Notify("Team card exported.");
     }
 }

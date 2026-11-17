@@ -428,12 +428,13 @@ public sealed partial class WhiteboardViewModel : PageViewModel
     [RelayCommand]
     private async Task ExportPng()
     {
-        var path = await _services.Dialogs.SaveFileAsync("Export the whiteboard", "whiteboard.png", DialogService.PngFiles);
-        if (path is null) return;
         try
         {
-            using var bitmap = WhiteboardRenderer.RenderPng(Board, Store);
-            bitmap.Save(path);
+            if (!await _services.Dialogs.SaveFileAsync("Export the whiteboard", "whiteboard.png", DialogService.PngFiles, path =>
+                {
+                    using var bitmap = WhiteboardRenderer.RenderPng(Board, Store);
+                    bitmap.Save(path);
+                })) return;
             _services.Dialogs.Notify("Whiteboard exported.");
         }
         catch (Exception ex)

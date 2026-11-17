@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
              xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
              xmlns:c="using:PokemonRpgStudio.App.Controls"
              xmlns:m="using:PokemonRpgStudio.Core.Models"
@@ -21,7 +22,7 @@
     </Style>
   </UserControl.Styles>
 
-  <Grid ColumnDefinitions="260,*">
+  <Grid ColumnDefinitions="260,*" views:Adaptive.DrawerBelow="560">
     <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
       <DockPanel Margin="14,20,14,14">
         <StackPanel DockPanel.Dock="Top" Spacing="8">

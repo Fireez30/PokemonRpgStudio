@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- resizeableActivity: the app follows the screen when a foldable is folded / unfolded, in split screen
+     and in free-form windows (the activity handles size changes itself, see MainActivity). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+  <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true"
+                    android:xlargeScreens="true" android:resizeable="true" android:anyDensity="true" />
+  <application android:label="Pokémon RPG Studio" android:icon="@drawable/icon" android:allowBackup="true"
+               android:resizeableActivity="true" android:supportsRtl="true" />
+</manifest>

@@ -1,0 +1,103 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Android (APK) head. The UI is the one of the desktop application: its sources (views, view models,
+       services, assets) are compiled from ../PokemonRpgStudio.App, so the desktop project stays unchanged.
+       Build with ./scripts/build.sh android (after running setup.sh with the android option). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>PokemonRpgStudio.App</RootNamespace>
+    <AssemblyName>PokemonRpgStudio.Android</AssemblyName>
+    <ApplicationId>dev.faeres.pokemonrpgstudio</ApplicationId>
+    <ApplicationTitle>Pokémon RPG Studio</ApplicationTitle>
+    <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
+    <!-- versionCode: 1.2.3 → 10203 (must grow with each release so Android accepts the update) -->
+    <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Multiply($(Version.Split('.')[0]), 10000)), $([MSBuild]::Add($([MSBuild]::Multiply($(Version.Split('.')[1]), 100)), $(Version.Split('.')[2])))))</ApplicationVersion>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Performance: the whole app is compiled ahead of time (no profile: every method, not only the startup
+         ones), with LLVM for faster code (layout of the big pages is CPU-heavy on phones). Slower to build. -->
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <EnableLLVM>true</EnableLLVM>
+    <!-- Release APKs are trimmed: only the framework / libraries that support it, not the app's own code
+         (partial). The data files, sheets and settings use reflection-based System.Text.Json, which trimmed
+         builds turn off by default. -->
+    <TrimMode>partial</TrimMode>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+
+    <AppSourceDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../PokemonRpgStudio.App'))</AppSourceDir>
+    <ProjectRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</ProjectRoot>
+    <PokemonDataDir Condition="'$(PokemonDataDir)' == ''">$(ProjectRoot)/pokemon_data</PokemonDataDir>
+    <PokemonImagesDir Condition="'$(PokemonImagesDir)' == ''">$(ProjectRoot)/pokemon_images</PokemonImagesDir>
+  </PropertyGroup>
+
+  <!-- The Android implicit usings (Android.App, Android.Widget…) clash with Avalonia names in the shared sources. -->
+  <ItemGroup>
+    <Using Remove="Android.App" />
+    <Using Remove="Android.Widget" />
+    <Using Remove="Android.OS" />
+    <Using Remove="Android.Views" />
+    <Using Remove="Android.Content" />
+    <Using Remove="Android.Runtime" />
+  </ItemGroup>
+
+  <!-- GC: a larger nursery (young objects) means fewer collections, so fewer pauses while scrolling;
+       concurrent marking for the old objects (the game data is large). -->
+  <ItemGroup>
+    <AndroidEnvironment Include="Environment.txt" />
+  </ItemGroup>
+
+  <!-- Shared UI sources (everything but the desktop entry point). -->
+  <ItemGroup>
+    <Compile Include="$(AppSourceDir)/**/*.cs" Exclude="$(AppSourceDir)/Program.cs;$(AppSourceDir)/bin/**;$(AppSourceDir)/obj/**"
+             Link="App/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AvaloniaXaml Include="$(AppSourceDir)/**/*.axaml" Exclude="$(AppSourceDir)/bin/**;$(AppSourceDir)/obj/**"
+                  Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <AvaloniaResource Include="$(AppSourceDir)/Assets/**" Link="Assets/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Default game data, packed as APK assets (DefaultData/...). On first start (and after an update that ships
+       new data) they are copied to the app's data folder, which is where the application reads and updates them. -->
+  <ItemGroup>
+    <AndroidAsset Include="$(PokemonDataDir)/pokemon.json;$(PokemonDataDir)/moves.json;$(PokemonDataDir)/abilities.json"
+                  Link="Assets/DefaultData/%(Filename)%(Extension)" />
+    <AndroidAsset Include="$(PokemonDataDir)/type_chart.json" Condition="Exists('$(PokemonDataDir)/type_chart.json')"
+                  Link="Assets/DefaultData/%(Filename)%(Extension)" />
+    <AndroidAsset Include="$(PokemonImagesDir)/*.png;$(PokemonImagesDir)/*.jpg;$(PokemonImagesDir)/*.jpeg;$(PokemonImagesDir)/*.webp"
+                  Link="Assets/DefaultData/images/%(Filename)%(Extension)" Visible="false" />
+  </ItemGroup>
+
+  <!-- DefaultData/data-version.txt: SHA-256 of each shipped file, same format as the desktop build. -->
+  <Target Name="WriteAndroidDataVersion" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <_DefaultDataFile Include="@(AndroidAsset)" Condition="$([System.String]::Copy('%(AndroidAsset.Link)').StartsWith('Assets/DefaultData'))" />
+    </ItemGroup>
+    <ItemGroup>
+      <!-- Same names as the desktop stamp: DefaultData/pokemon.json, DefaultData/images/… -->
+      <_DefaultDataFile DataPath="$([System.String]::Copy('%(_DefaultDataFile.Link)').Substring(7))" />
+    </ItemGroup>
+    <GetFileHash Files="@(_DefaultDataFile)" Algorithm="SHA256">
+      <Output TaskParameter="Items" ItemName="_DefaultDataHash" />
+    </GetFileHash>
+    <WriteLinesToFile File="$(IntermediateOutputPath)data-version.txt"
+                      Lines="@(_DefaultDataHash->'%(DataPath) %(FileHash)')"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <AndroidAsset Include="$(IntermediateOutputPath)data-version.txt" Link="Assets/DefaultData/data-version.txt" />
+      <FileWrites Include="$(IntermediateOutputPath)data-version.txt" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PokemonRpgStudio.Core/PokemonRpgStudio.Core.csproj" />
+  </ItemGroup>
+</Project>

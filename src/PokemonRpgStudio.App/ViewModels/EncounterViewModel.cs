@@ -410,11 +410,10 @@ public sealed partial class EncounterViewModel : PageViewModel
     private async Task ExportJson()
     {
         var name = string.IsNullOrWhiteSpace(ZoneName) ? "zone" : ZoneName.Trim();
-        var path = await _services.Dialogs.SaveFileAsync("Export zone", name + ".json", DialogService.JsonFiles);
-        if (path is null) return;
         // Same shape as the website's "Save JSON" button.
         var payload = new { zoneName = ZoneName, sections = CurrentSections() };
-        await File.WriteAllTextAsync(path, JsonSerializer.Serialize(payload, JsonDefaults.Options));
+        if (!await _services.Dialogs.SaveFileAsync("Export zone", name + ".json", DialogService.JsonFiles,
+                path => File.WriteAllTextAsync(path, JsonSerializer.Serialize(payload, JsonDefaults.Options)))) return;
         _services.Dialogs.Notify("Zone exported.");
     }
 

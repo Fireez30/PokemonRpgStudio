@@ -1,0 +1,98 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
+             x:Class="PokemonRpgStudio.App.Views.MainView"
+             x:DataType="vm:MainWindowViewModel"
+             Background="{DynamicResource PageBackground}">
+  <!-- Root-level so the pages shown inside a section (Sheets, Tools) find their view too. -->
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="vm:SectionViewModel"><views:SectionView /></DataTemplate>
+    <DataTemplate DataType="vm:SheetsViewModel"><views:SheetsView /></DataTemplate>
+    <DataTemplate DataType="vm:SheetDatabaseViewModel"><views:SheetDatabaseView /></DataTemplate>
+    <DataTemplate DataType="vm:SheetEditorViewModel"><views:SheetEditorView /></DataTemplate>
+    <DataTemplate DataType="vm:PokedexViewModel"><views:PokedexView /></DataTemplate>
+    <DataTemplate DataType="vm:MovesViewModel"><views:MovesView /></DataTemplate>
+    <DataTemplate DataType="vm:AbilitiesViewModel"><views:AbilitiesView /></DataTemplate>
+    <DataTemplate DataType="vm:TeamsViewModel"><views:PageHost Content="{Binding CurrentView}" /></DataTemplate>
+    <DataTemplate DataType="vm:TeamManagerViewModel"><views:TeamManagerView /></DataTemplate>
+    <DataTemplate DataType="vm:TeamCardViewModel"><views:TeamCardView /></DataTemplate>
+    <DataTemplate DataType="vm:EncounterViewModel"><views:EncounterView /></DataTemplate>
+    <DataTemplate DataType="vm:DiceViewModel"><views:DiceView /></DataTemplate>
+    <DataTemplate DataType="vm:AnalyzerViewModel"><views:AnalyzerView /></DataTemplate>
+    <DataTemplate DataType="vm:TypeChartViewModel"><views:TypeChartView /></DataTemplate>
+    <DataTemplate DataType="vm:WhiteboardViewModel"><views:WhiteboardView /></DataTemplate>
+    <DataTemplate DataType="vm:ShopViewerViewModel"><views:ShopViewerView /></DataTemplate>
+    <DataTemplate DataType="vm:ShopEditorViewModel"><views:ShopEditorView /></DataTemplate>
+    <DataTemplate DataType="vm:SettingsViewModel"><views:SettingsView /></DataTemplate>
+  </UserControl.DataTemplates>
+
+  <UserControl.Styles>
+    <Style Selector="Button.appbar">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="FontSize" Value="20" />
+      <Setter Property="Width" Value="48" />
+      <Setter Property="Height" Value="48" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <!-- icon rail: icons only -->
+    <Style Selector="ListBox.rail TextBlock.navtitle">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+  </UserControl.Styles>
+
+  <!-- Adaptive shell (see MainView.axaml.cs):
+       wide (desktop, unfolded foldable in landscape): sidebar with the page names;
+       medium (unfolded foldable, tablet): icon rail, the menu button opens the names over the page;
+       narrow (phone, folded foldable): top bar with a menu button, the menu slides over the page. -->
+  <Panel>
+    <DockPanel>
+      <Border x:Name="TopBar" DockPanel.Dock="Top" IsVisible="False" Background="{DynamicResource SidebarBackground}"
+              BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="4,2,12,2">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Button x:Name="TopMenuButton" Classes="appbar" Content="☰" />
+          <TextBlock Grid.Column="1" Text="{Binding CurrentPage.Title}" FontSize="17" FontWeight="SemiBold"
+                     VerticalAlignment="Center" Margin="6,0" TextTrimming="CharacterEllipsis" />
+          <Image Grid.Column="2" Source="/Assets/app-icon.png" Width="28" Height="28" />
+        </Grid>
+      </Border>
+
+      <SplitView x:Name="Shell" DisplayMode="Inline" IsPaneOpen="True" OpenPaneLength="220" CompactPaneLength="64"
+                 PaneBackground="{DynamicResource SidebarBackground}">
+        <SplitView.Pane>
+          <DockPanel>
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Margin="14,18,16,14">
+              <Button x:Name="RailMenuButton" Classes="appbar" Content="☰" IsVisible="False" Margin="-6,-6,0,-6" />
+              <StackPanel x:Name="Brand" Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="2,0,0,0">
+                <Image Source="/Assets/app-icon.png" Width="36" Height="36" />
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock Text="Pokémon RPG" FontWeight="Bold" FontSize="16" />
+                  <TextBlock Text="Studio" Classes="muted" FontSize="12" />
+                </StackPanel>
+              </StackPanel>
+            </Grid>
+            <TextBlock x:Name="VersionText" DockPanel.Dock="Bottom" Text="{Binding Version}" Classes="muted" FontSize="11" Margin="18,10" />
+            <ListBox x:Name="Nav" Classes="nav" ItemsSource="{Binding Pages}" SelectedItem="{Binding CurrentPage}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:PageViewModel">
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Text="{Binding Glyph}" Width="20" TextAlignment="Center" FontSize="15" />
+                    <TextBlock Classes="navtitle" Text="{Binding Title}" FontSize="14" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+        </SplitView.Pane>
+
+        <!-- Each page is built once and kept (see PageHost). -->
+        <views:PageHost Content="{Binding CurrentPage}" />
+      </SplitView>
+    </DockPanel>
+
+    <!-- In-app dialogs (Android: no windows), see DialogService. -->
+    <Panel x:Name="DialogLayer" IsVisible="False" />
+  </Panel>
+</UserControl>

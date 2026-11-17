@@ -1,5 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
+             xmlns:s="using:PokemonRpgStudio.App.Services"
              xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
              x:Class="PokemonRpgStudio.App.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
@@ -11,20 +13,20 @@
       <Border Classes="card">
         <StackPanel Spacing="12">
           <TextBlock Classes="section-title" Text="Appearance" />
-          <StackPanel Orientation="Horizontal" Spacing="12">
+          <WrapPanel ItemSpacing="12" LineSpacing="6">
             <TextBlock Classes="label" Text="Theme" Width="160" />
             <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" Width="160" />
-          </StackPanel>
+          </WrapPanel>
         </StackPanel>
       </Border>
 
       <Border Classes="card">
         <StackPanel Spacing="12">
           <TextBlock Classes="section-title" Text="Exports" />
-          <StackPanel Orientation="Horizontal" Spacing="12">
+          <WrapPanel ItemSpacing="12" LineSpacing="6">
             <TextBlock Classes="label" Text="Image base URL" Width="160" />
-            <TextBox Text="{Binding ImageBaseUrl}" Width="360" />
-          </StackPanel>
+            <TextBox Text="{Binding ImageBaseUrl}" views:Adaptive.FillUpTo="360" />
+          </WrapPanel>
           <TextBlock Classes="muted" Text="Markdown / Google Doc exports reference the sprite at &lt;base URL&gt;/images/&lt;pokemon&gt;.png (the website by default)." />
         </StackPanel>
       </Border>
@@ -36,7 +38,7 @@
           <ItemsControl ItemsSource="{Binding DataFiles}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:DataFileRow">
-                <Grid ColumnDefinitions="120,170,*" Margin="0,2">
+                <Grid ColumnDefinitions="120,170,*" Margin="0,2" views:Adaptive.StackBelow="520">
                   <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                   <TextBlock Grid.Column="1" Text="{Binding Info}" Classes="muted" FontSize="12" VerticalAlignment="Center" />
                   <SelectableTextBlock Grid.Column="2" Text="{Binding Path}" TextWrapping="Wrap" FontSize="12" Margin="8,0,0,0" />
@@ -49,7 +51,7 @@
           <WrapPanel>
             <Button Classes="accent" Content="Install updated data files…" Command="{Binding InstallDataFilesCommand}" Margin="0,0,8,6" />
             <Button Content="Reload data" Command="{Binding ReloadDataCommand}" Margin="0,0,8,6" ToolTip.Tip="Read the files again after replacing or editing them" />
-            <Button Content="Open data folder" Command="{Binding OpenDataFolderCommand}" Margin="0,0,8,6" />
+            <Button Content="Open data folder" Command="{Binding OpenDataFolderCommand}" Margin="0,0,8,6" IsVisible="{x:Static s:PlatformInfo.CanOpenFolders}" />
             <Button Content="Restore default data" Command="{Binding ResetPokedexEditsCommand}" Margin="0,0,8,6" IsVisible="{Binding HasDefaultData}"
                     ToolTip.Tip="Replace the three files with the defaults shipped with the application" />
           </WrapPanel>
@@ -69,7 +71,7 @@
                      Text="Sprites are normal image files too (png, jpg, webp), named like the website: charizard.png, charizard_mega.png, nidoran_(f).png… Add or replace files in this folder (then Reload data), or use the button below." />
           <WrapPanel>
             <Button Content="Add / replace sprites…" Command="{Binding InstallSpritesCommand}" Margin="0,0,8,6" />
-            <Button Content="Open sprites folder" Command="{Binding OpenSpritesFolderCommand}" Margin="0,0,8,6" />
+            <Button Content="Open sprites folder" Command="{Binding OpenSpritesFolderCommand}" Margin="0,0,8,6" IsVisible="{x:Static s:PlatformInfo.CanOpenFolders}" />
           </WrapPanel>
         </StackPanel>
       </Border>
@@ -79,7 +81,7 @@
           <TextBlock Classes="section-title" Text="Your files" />
           <SelectableTextBlock Text="{Binding UserFolder}" TextWrapping="Wrap" />
           <TextBlock Classes="muted" Text="Sheets, teams and zones are stored as one JSON file each (sheets/, teams/, zones/). Set POKEMON_RPG_STUDIO_HOME to use another folder." />
-          <WrapPanel>
+          <WrapPanel IsVisible="{x:Static s:PlatformInfo.CanOpenFolders}">
             <Button Content="Open my files folder" Command="{Binding OpenUserFolderCommand}" Margin="0,0,8,0" />
           </WrapPanel>
         </StackPanel>

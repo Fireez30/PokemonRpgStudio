@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
              xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
              xmlns:c="using:PokemonRpgStudio.App.Controls"
              x:Class="PokemonRpgStudio.App.Views.MovesView"
@@ -52,7 +53,8 @@
     </StackPanel>
 
     <Grid x:Name="Split" ColumnDefinitions="*,16,360" RowDefinitions="*,Auto">
-      <!-- ── Table ── -->
+      <!-- ── Table (scrolls sideways on narrow screens) ── -->
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:Adaptive.MinContentWidth="800">
         <DockPanel>
           <TextBlock DockPanel.Dock="Bottom" Classes="muted" FontSize="11" Margin="4,6,0,10" Text="{Binding CountText}" />
           <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="4,0">
@@ -87,6 +89,7 @@
             </ListBox.ItemTemplate>
           </ListBox>
         </DockPanel>
+      </ScrollViewer>
 
       <!-- ── Details (beside the table, or below it in narrow windows) ── -->
       <ScrollViewer x:Name="DetailsPane" Grid.Column="2" Margin="0,0,0,12">

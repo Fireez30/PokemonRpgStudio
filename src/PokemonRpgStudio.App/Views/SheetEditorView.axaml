@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
              xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
              xmlns:c="using:PokemonRpgStudio.App.Controls"
              x:Class="PokemonRpgStudio.App.Views.SheetEditorView"
@@ -64,28 +65,30 @@
     <DockPanel IsVisible="{Binding IsEditing}">
       <!-- toolbar -->
       <Border DockPanel.Dock="Top" Padding="20,12" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1">
-        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
-          <TextBlock Text="{Binding HeaderTitle}" FontSize="20" FontWeight="Bold" Margin="0,0,0,8" Grid.ColumnSpan="3" />
-          <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-            <TextBlock Classes="label" Text="Nickname" />
-            <TextBox Width="220" Text="{Binding Nickname}" Watermark="Required to save" />
-            <TextBlock Classes="label" Text="Status" />
-            <ComboBox Width="140" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding Status}" />
-            <CheckBox Content="Auto-save" IsChecked="{Binding AutoSave}" />
-            <TextBlock Classes="muted" Text="{Binding SaveStatus}" VerticalAlignment="Center" FontSize="12" />
-          </StackPanel>
-          <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
-            <Button Content="Save" Command="{Binding SaveCommand}" ToolTip.Tip="Ctrl+S" />
-            <Button Classes="accent" Content="Done ✓" Command="{Binding DoneCommand}" ToolTip.Tip="Save and go back to the sheet" />
-          </StackPanel>
-        </Grid>
+        <StackPanel>
+          <TextBlock Text="{Binding HeaderTitle}" FontSize="20" FontWeight="Bold" Margin="0,0,0,8" TextWrapping="Wrap" />
+          <Grid ColumnDefinitions="*,Auto" views:Adaptive.StackBelow="620">
+            <WrapPanel ItemSpacing="10" LineSpacing="6" VerticalAlignment="Center">
+              <TextBlock Classes="label" Text="Nickname" />
+              <TextBox Width="220" Text="{Binding Nickname}" Watermark="Required to save" />
+              <TextBlock Classes="label" Text="Status" />
+              <ComboBox Width="140" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding Status}" />
+              <CheckBox Content="Auto-save" IsChecked="{Binding AutoSave}" />
+              <TextBlock Classes="muted" Text="{Binding SaveStatus}" VerticalAlignment="Center" FontSize="12" />
+            </WrapPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Center">
+              <Button Content="Save" Command="{Binding SaveCommand}" ToolTip.Tip="Ctrl+S" />
+              <Button Classes="accent" Content="Done ✓" Command="{Binding DoneCommand}" ToolTip.Tip="Save and go back to the sheet" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
       </Border>
 
       <ScrollViewer>
         <StackPanel Margin="20,16" Grid.IsSharedSizeScope="True">
           <TextBlock Classes="bad" Text="{Binding SpeciesWarning}" IsVisible="{Binding SpeciesWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Margin="0,0,0,10" />
 
-          <Grid ColumnDefinitions="*,16,*">
+          <Grid ColumnDefinitions="*,16,*" views:Adaptive.StackBelow="720">
             <!-- ═══ Left: build ═══ -->
             <StackPanel>
               <Border Classes="card">
@@ -369,31 +372,39 @@
 
               <TextBlock Text="Level-up moves" FontWeight="SemiBold" Margin="0,6,0,0" />
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ComboBox ItemsSource="{Binding LevelMoveOptions}" SelectedItem="{Binding SelectedLevelMove}" PlaceholderText="Level-up moves (later ones: tutor)…" MinWidth="360" MaxDropDownHeight="420" />
+                <ComboBox ItemsSource="{Binding LevelMoveOptions}" SelectedItem="{Binding SelectedLevelMove}" PlaceholderText="Level-up moves (later ones: tutor)…" views:Adaptive.FillUpTo="360" MaxDropDownHeight="420" />
                 <Button Content="Add" Command="{Binding AddLevelMoveCommand}" />
               </StackPanel>
-              <ItemsControl ItemsSource="{Binding ChosenMoveRows}" />
+              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:Adaptive.MinContentWidth="660">
+                <ItemsControl ItemsSource="{Binding ChosenMoveRows}" />
+              </ScrollViewer>
 
               <TextBlock Text="Egg moves" FontWeight="SemiBold" Margin="0,10,0,0" />
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ComboBox ItemsSource="{Binding EggMoveOptions}" SelectedItem="{Binding SelectedEggMove}" PlaceholderText="Egg moves…" MinWidth="360" MaxDropDownHeight="420" />
+                <ComboBox ItemsSource="{Binding EggMoveOptions}" SelectedItem="{Binding SelectedEggMove}" PlaceholderText="Egg moves…" views:Adaptive.FillUpTo="360" MaxDropDownHeight="420" />
                 <Button Content="Add" Command="{Binding AddEggMoveCommand}" />
               </StackPanel>
-              <ItemsControl ItemsSource="{Binding EggMoveRows}" />
+              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:Adaptive.MinContentWidth="660">
+                <ItemsControl ItemsSource="{Binding EggMoveRows}" />
+              </ScrollViewer>
 
               <TextBlock Text="Tutor moves" FontWeight="SemiBold" Margin="0,10,0,0" />
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ComboBox ItemsSource="{Binding TutorMoveOptions}" SelectedItem="{Binding SelectedTutorMove}" PlaceholderText="Tutor moves…" MinWidth="360" MaxDropDownHeight="420" />
+                <ComboBox ItemsSource="{Binding TutorMoveOptions}" SelectedItem="{Binding SelectedTutorMove}" PlaceholderText="Tutor moves…" views:Adaptive.FillUpTo="360" MaxDropDownHeight="420" />
                 <Button Content="Add" Command="{Binding AddTutorMoveCommand}" />
               </StackPanel>
-              <ItemsControl ItemsSource="{Binding TutorMoveRows}" />
+              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:Adaptive.MinContentWidth="660">
+                <ItemsControl ItemsSource="{Binding TutorMoveRows}" />
+              </ScrollViewer>
 
               <TextBlock Text="TM moves" FontWeight="SemiBold" Margin="0,10,0,0" />
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ComboBox ItemsSource="{Binding TmMoveOptions}" SelectedItem="{Binding SelectedTmMove}" PlaceholderText="TM moves…" MinWidth="360" MaxDropDownHeight="420" />
+                <ComboBox ItemsSource="{Binding TmMoveOptions}" SelectedItem="{Binding SelectedTmMove}" PlaceholderText="TM moves…" views:Adaptive.FillUpTo="360" MaxDropDownHeight="420" />
                 <Button Content="Add" Command="{Binding AddTmMoveCommand}" />
               </StackPanel>
-              <ItemsControl ItemsSource="{Binding TmMoveRows}" />
+              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:Adaptive.MinContentWidth="660">
+                <ItemsControl ItemsSource="{Binding TmMoveRows}" />
+              </ScrollViewer>
             </StackPanel>
           </Border>
 

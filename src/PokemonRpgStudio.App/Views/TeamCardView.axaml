@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
              xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
              xmlns:c="using:PokemonRpgStudio.App.Controls"
              x:Class="PokemonRpgStudio.App.Views.TeamCardView"
@@ -9,7 +10,7 @@
       <Button Content="← Back to teams" Command="{Binding BackCommand}" Margin="0,0,0,10" />
       <TextBlock Classes="page-title" Text="Team Card" />
       <TextBlock Classes="page-subtitle" Text="Compose any team (trainers, NPCs, rivals…) and export a card with the Pokémon, a trainer image and a theme type. Nothing is saved here — go back to the teams for teams built from your sheets." />
-      <Grid ColumnDefinitions="*,16,*">
+      <Grid ColumnDefinitions="*,16,*" views:Adaptive.StackBelow="720">
         <StackPanel>
           <Border Classes="card">
             <StackPanel Spacing="10">

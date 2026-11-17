@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
              xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
              x:Class="PokemonRpgStudio.App.Views.AbilitiesView"
              x:DataType="vm:AbilitiesViewModel">
@@ -44,30 +45,32 @@
     </StackPanel>
 
     <Grid x:Name="Split" ColumnDefinitions="*,16,400" RowDefinitions="*,Auto">
-      <!-- ── Table ── -->
-      <DockPanel>
-        <TextBlock DockPanel.Dock="Bottom" Classes="muted" FontSize="11" Margin="4,6,0,10" Text="{Binding CountText}" />
-        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="4,0">
-          <Grid ColumnDefinitions="180,100,*,86">
-            <Button Classes="header" Classes.active="{Binding NameHeader.IsActive}" Content="{Binding NameHeader.Text}" Command="{Binding NameHeader.Command}" />
-            <Button Grid.Column="1" Classes="header" Classes.active="{Binding FrequencyHeader.IsActive}" Content="{Binding FrequencyHeader.Text}" Command="{Binding FrequencyHeader.Command}" />
-            <TextBlock Grid.Column="2" Classes="th" Text="Effect" VerticalAlignment="Center" />
-            <Button Grid.Column="3" Classes="header" Classes.active="{Binding HoldersHeader.IsActive}" Content="{Binding HoldersHeader.Text}" Command="{Binding HoldersHeader.Command}" ToolTip.Tip="Number of Pokémon that can have the ability" />
-          </Grid>
-        </Border>
-        <ListBox Classes="table" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" Background="Transparent">
-          <ListBox.ItemTemplate>
-            <DataTemplate x:DataType="vm:AbilityRow">
-              <Grid ColumnDefinitions="180,100,*,86">
-                <TextBlock Classes="td" Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
-                <TextBlock Grid.Column="1" Classes="td" Text="{Binding Frequency}" />
-                <TextBlock Grid.Column="2" Classes="td" Text="{Binding Summary}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource MutedText}" />
-                <TextBlock Grid.Column="3" Classes="td" Text="{Binding Holders}" />
-              </Grid>
-            </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
-      </DockPanel>
+      <!-- ── Table (scrolls sideways on narrow screens) ── -->
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:Adaptive.MinContentWidth="620">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Bottom" Classes="muted" FontSize="11" Margin="4,6,0,10" Text="{Binding CountText}" />
+          <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1" Padding="4,0">
+            <Grid ColumnDefinitions="180,100,*,86">
+              <Button Classes="header" Classes.active="{Binding NameHeader.IsActive}" Content="{Binding NameHeader.Text}" Command="{Binding NameHeader.Command}" />
+              <Button Grid.Column="1" Classes="header" Classes.active="{Binding FrequencyHeader.IsActive}" Content="{Binding FrequencyHeader.Text}" Command="{Binding FrequencyHeader.Command}" />
+              <TextBlock Grid.Column="2" Classes="th" Text="Effect" VerticalAlignment="Center" />
+              <Button Grid.Column="3" Classes="header" Classes.active="{Binding HoldersHeader.IsActive}" Content="{Binding HoldersHeader.Text}" Command="{Binding HoldersHeader.Command}" ToolTip.Tip="Number of Pokémon that can have the ability" />
+            </Grid>
+          </Border>
+          <ListBox Classes="table" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:AbilityRow">
+                <Grid ColumnDefinitions="180,100,*,86">
+                  <TextBlock Classes="td" Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="1" Classes="td" Text="{Binding Frequency}" />
+                  <TextBlock Grid.Column="2" Classes="td" Text="{Binding Summary}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource MutedText}" />
+                  <TextBlock Grid.Column="3" Classes="td" Text="{Binding Holders}" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </ScrollViewer>
 
       <!-- ── Details (beside the table, or below it in narrow windows) ── -->
       <ScrollViewer x:Name="DetailsPane" Grid.Column="2" Margin="0,0,0,12">

@@ -9,7 +9,7 @@ using PokemonRpgStudio.Core.Storage;
 
 namespace PokemonRpgStudio.App.ViewModels;
 
-/// <summary>One row of a shop: name, quantity and price (mandatory) and an optional picture.</summary>
+/// <summary>One row of a shop: name, quantity and price (mandatory), an optional picture and an optional effect.</summary>
 public sealed partial class ShopItemVm : ObservableObject
 {
     private readonly ShopsViewModel _owner;
@@ -67,6 +67,21 @@ public sealed partial class ShopItemVm : ObservableObject
             _owner.ItemChanged();
         }
     }
+
+    public string Effect
+    {
+        get => Item.Effect;
+        set
+        {
+            if (Item.Effect == (value ?? "")) return;
+            Item.Effect = value ?? "";
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasEffect));
+            _owner.ItemChanged();
+        }
+    }
+
+    public bool HasEffect => !string.IsNullOrWhiteSpace(Item.Effect);
 
     public bool IsSoldOut => Item.Quantity == 0;
 
@@ -334,12 +349,12 @@ public sealed partial class ShopsViewModel : ObservableObject
             _services.Dialogs.Notify($"Every item needs a name before exporting ({unnamed.Count} unnamed, in {string.Join(", ", unnamed.Distinct())}).", isError: true);
             return;
         }
-        var path = await _services.Dialogs.SaveFileAsync("Export shops", suggestedName + ".json", DialogService.JsonFiles);
-        if (path is null) return;
         try
         {
             Flush();
-            await File.WriteAllTextAsync(path, Store.Export(shops));
+            var json = Store.Export(shops);
+            if (!await _services.Dialogs.SaveFileAsync("Export shops", suggestedName + ".json", DialogService.JsonFiles,
+                    path => File.WriteAllTextAsync(path, json))) return;
             _services.Dialogs.Notify(shops.Count == 1 ? "Shop exported." : $"{shops.Count} shops exported.");
         }
         catch (Exception ex)

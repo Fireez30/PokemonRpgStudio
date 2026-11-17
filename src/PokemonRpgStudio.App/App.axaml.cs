@@ -1,7 +1,9 @@
 using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using PokemonRpgStudio.App.Services;
 using PokemonRpgStudio.Core.Data;
 using PokemonRpgStudio.App.ViewModels;
@@ -36,22 +38,52 @@ public partial class App : Application
                 desktop.MainWindow = StartupErrorWindow.Create(ex);
             }
         }
+        else if (ApplicationLifetime is ISingleViewApplicationLifetime single)
+        {
+            // Android: the first start copies the bundled data (a few seconds), so it runs off the UI thread.
+            single.MainView = StartupErrorWindow.CreateLoadingView();
+            Task.Run(AppServices.Initialize).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+            {
+                if (t.Exception is { } ex)
+                {
+                    single.MainView = StartupErrorWindow.CreateView(ex.InnerException ?? ex);
+                    return;
+                }
+                var vm = new MainWindowViewModel(t.Result);
+                single.MainView = CreateMainView(vm);
+                // Android may end a background application without warning: save when leaving it.
+                if (TryGetFeature(typeof(IActivatableLifetime)) is IActivatableLifetime activatable)
+                    activatable.Deactivated += (_, _) => vm.Shutdown();
+            }));
+        }
         base.OnFrameworkInitializationCompleted();
     }
 
     private static MainWindow CreateMainWindow(AppServices services)
     {
+        var vm = new MainWindowViewModel(services);
+        var window = new MainWindow { DataContext = vm };
+        window.Opened += (_, _) => ShowDataNotice(services);
         ApplyTheme(services.Settings.Theme);
-        var window = new MainWindow { DataContext = new MainWindowViewModel(services) };
-        services.Dialogs.Attach(window);
-        if (services.SeededFiles.Count > 0 || services.SeededImages > 0)
-        {
-            var what = services.SeededFiles.Concat(services.SeededImages > 0 ? new[] { $"{services.SeededImages} sprites" } : Array.Empty<string>());
-            var verb = services.DataUpdated ? "updated to the version shipped with the application" : "set up";
-            window.Opened += (_, _) => services.Dialogs.Notify(
-                $"Game data {verb} in {services.DataDir} ({string.Join(", ", what)}). Update these files from Settings → Game data.");
-        }
         return window;
+    }
+
+    private static MainView CreateMainView(MainWindowViewModel vm)
+    {
+        ApplyTheme(vm.Services.Settings.Theme);
+        var view = new MainView { DataContext = vm };
+        view.Loaded += (_, _) => ShowDataNotice(vm.Services);
+        return view;
+    }
+
+    private static void ShowDataNotice(AppServices services)
+    {
+        if (services.SeededFiles.Count == 0 && services.SeededImages == 0) return;
+        var what = services.SeededFiles.Concat(services.SeededImages > 0 ? new[] { $"{services.SeededImages} sprites" } : Array.Empty<string>());
+        var verb = services.DataUpdated ? "updated to the version shipped with the application" : "set up";
+        services.Dialogs.Notify(PlatformInfo.IsMobile
+            ? $"Game data {verb} ({string.Join(", ", what)})."
+            : $"Game data {verb} in {services.DataDir} ({string.Join(", ", what)}). Update these files from Settings → Game data.");
     }
 
     public static void ApplyTheme(string theme)

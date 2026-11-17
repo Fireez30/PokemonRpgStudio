@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
              xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
              xmlns:c="using:PokemonRpgStudio.App.Controls"
              x:Class="PokemonRpgStudio.App.Views.ShopEditorView"
@@ -21,7 +22,7 @@
     </Style>
   </UserControl.Styles>
 
-  <Grid ColumnDefinitions="260,*" DataContext="{Binding Shops}" x:DataType="vm:ShopsViewModel">
+  <Grid ColumnDefinitions="260,*" views:Adaptive.DrawerBelow="560" DataContext="{Binding Shops}" x:DataType="vm:ShopsViewModel">
     <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
       <DockPanel Margin="14,20,14,14">
         <StackPanel DockPanel.Dock="Top" Spacing="8">
@@ -50,7 +51,7 @@
     <StackPanel Grid.Column="1" IsVisible="{Binding !HasShop}" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12" MaxWidth="460">
       <TextBlock Text="Shops" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
       <TextBlock Classes="muted" TextAlignment="Center"
-                 Text="Keep the stock of your marts and merchants: every item has a name, a quantity and a price, and can have a picture. Shops are saved automatically and can be exported to or imported from JSON files." />
+                 Text="Keep the stock of your marts and merchants: every item has a name, a quantity and a price, and can have a picture and an effect. Shops are saved automatically and can be exported to or imported from JSON files." />
       <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
         <Button Classes="accent" Content="+ Create a shop" Command="{Binding NewShopCommand}" />
         <Button Content="Import…" Command="{Binding ImportCommand}" />
@@ -87,7 +88,7 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:ShopItemVm">
               <Border Classes="card" Padding="12,8" Margin="0,0,0,6">
-                <Grid ColumnDefinitions="60,*,130,150,Auto">
+                <Grid ColumnDefinitions="60,*,130,150,Auto" RowDefinitions="Auto,Auto">
                   <Panel VerticalAlignment="Center" HorizontalAlignment="Left">
                     <Button Classes="picture" Command="{Binding ChoosePictureCommand}" ToolTip.Tip="Choose a picture (optional)">
                       <Panel>
@@ -111,6 +112,8 @@
                   <NumericUpDown Grid.Column="3" Value="{Binding Price}" Minimum="0" Increment="10" FormatString="#,0.##"
                                  VerticalAlignment="Center" Margin="0,0,10,0" ToolTip.Tip="Price of one item" />
                   <Button Grid.Column="4" Content="✕" Command="{Binding RemoveCommand}" VerticalAlignment="Center" ToolTip.Tip="Remove the item" />
+                  <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Effect}" Margin="0,6,10,0"
+                           Watermark="Effect (optional): what the item does" AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="120" />
                 </Grid>
               </Border>
             </DataTemplate>
