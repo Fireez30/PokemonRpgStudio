@@ -20,6 +20,8 @@ public sealed class AppPaths
     public string Whiteboard => Path.Combine(Root, "whiteboard");
     /// <summary>The shops (<c>shops.json</c>) and the pictures of their items.</summary>
     public string Shops => Path.Combine(Root, "shops");
+    /// <summary>The item wiki (<c>items.json</c>) and the pictures of its items.</summary>
+    public string ItemWiki => Path.Combine(Root, "wiki");
     public string Data => Path.Combine(Root, "data");
     public string Images => Path.Combine(Data, "images");
     public string SettingsFile => Path.Combine(Root, "settings.json");

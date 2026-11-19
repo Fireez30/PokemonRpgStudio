@@ -38,6 +38,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ShopsViewModel Shops { get; }
     public ShopViewerViewModel ShopViewer { get; }
     public ShopEditorViewModel ShopEditor { get; }
+    /// <summary>Every item of the game, its own and the shops' ones, sorted in sections.</summary>
+    public ItemWikiViewModel ItemWiki { get; }
     public SettingsViewModel Settings { get; }
 
     /// <summary>Sheets section: list view (sheet in use) or database view (table of every sheet).</summary>
@@ -73,6 +75,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Shops = new ShopsViewModel(services);
         ShopEditor = new ShopEditorViewModel(Shops);
         ShopViewer = new ShopViewerViewModel(Shops, () => ShopsSection.Show(ShopEditor));
+        ItemWiki = new ItemWikiViewModel(services, Shops);
         Settings = new SettingsViewModel(services);
         SheetsSection = new SectionViewModel(services, "sheets", "Sheets", "📝",
             new SectionTab("list", "List view", "📝", Sheets),
@@ -85,7 +88,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ShopsSection = new SectionViewModel(services, "shops", "Shops", "🛒",
             new SectionTab("view", "Shop view", "🛒", ShopViewer),
             new SectionTab("edit", "Edit", "✏", ShopEditor));
-        Pages = new PageViewModel[] { SheetsSection, Editor, Pokedex, Moves, Abilities, TeamsPage, Encounters, ShopsSection, Tools, Settings };
+        Pages = new PageViewModel[] { SheetsSection, Editor, Pokedex, Moves, Abilities, TeamsPage, Encounters, ShopsSection, ItemWiki, Tools, Settings };
         _currentPage = SheetsSection;
         SheetsSection.OnActivated();
     }
@@ -147,5 +150,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Teams.OnDeactivated();
         Whiteboard.OnDeactivated();
         Shops.Flush();
+        ItemWiki.Flush();
     }
 }

@@ -1,0 +1,161 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:PokemonRpgStudio.App.Views"
+             xmlns:vm="using:PokemonRpgStudio.App.ViewModels"
+             xmlns:c="using:PokemonRpgStudio.App.Controls"
+             x:Class="PokemonRpgStudio.App.Views.ItemWikiView"
+             x:DataType="vm:ItemWikiViewModel">
+  <UserControl.Styles>
+    <Style Selector="Button.picture">
+      <Setter Property="Width" Value="96" />
+      <Setter Property="Height" Value="96" />
+      <Setter Property="Padding" Value="4" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Background" Value="{DynamicResource SubtleBackground}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="TextBox.missing">
+      <Setter Property="BorderBrush" Value="{DynamicResource BadText}" />
+    </Style>
+    <!-- Section under an item being dragged. -->
+    <Style Selector="ListBoxItem.droptarget">
+      <Setter Property="Background" Value="{DynamicResource HighlightBackground}" />
+    </Style>
+    <Style Selector="ListBox.items ListBoxItem">
+      <Setter Property="Padding" Value="6,4" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="240,*" views:Adaptive.DrawerBelow="700" views:Adaptive.DrawerGlyph="📁">
+    <!-- ── Sections ── -->
+    <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
+      <DockPanel Margin="14,20,14,14">
+        <StackPanel DockPanel.Dock="Top" Spacing="8">
+          <TextBlock Classes="page-title" Text="Item Wiki" FontSize="22" />
+          <Button Content="+ New section" Command="{Binding NewSectionCommand}" HorizontalAlignment="Stretch" />
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,10,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding IsUserSectionSelected}">
+            <Button Classes="small" Content="Rename" Command="{Binding RenameSectionCommand}" />
+            <Button Classes="small" Content="↑" Command="{Binding MoveSectionUpCommand}" ToolTip.Tip="Move the section up" />
+            <Button Classes="small" Content="↓" Command="{Binding MoveSectionDownCommand}" ToolTip.Tip="Move the section down" />
+            <Button Classes="small danger" Content="Delete" Command="{Binding DeleteSectionCommand}"
+                    ToolTip.Tip="Delete the section (its items go to Unsorted)" />
+          </StackPanel>
+          <Button Content="🛒 Scan shops" Command="{Binding ScanShopsCommand}" HorizontalAlignment="Stretch"
+                  ToolTip.Tip="Add the items sold in the shops that the wiki doesn't have yet (also done each time this page opens)" />
+        </StackPanel>
+        <ListBox x:Name="SectionList" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}"
+                 Margin="0,10,0,0" Background="Transparent" DragDrop.AllowDrop="True">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:WikiSectionVm">
+              <Grid ColumnDefinitions="Auto,*,Auto" Background="Transparent">
+                <TextBlock Text="{Binding Glyph}" Width="22" />
+                <TextBlock Grid.Column="1" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="2" Classes="muted" FontSize="12" Text="{Binding Count}" Margin="6,0,0,0" VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <!-- ── Items ── -->
+    <DockPanel Grid.Column="1" Margin="24,20,24,0">
+      <StackPanel DockPanel.Dock="Top">
+        <TextBlock Classes="page-title" Text="{Binding ListTitle}" TextTrimming="CharacterEllipsis" />
+        <TextBlock Classes="page-subtitle"
+                   Text="Every item of your game. Items sold in the shops are added automatically; add your own with “New item”. Move an item to a section with its Section picker, or drag it onto a section." />
+        <WrapPanel Margin="0,0,0,8">
+          <TextBox Width="260" Watermark="Search name, effect, description…" Text="{Binding SearchText}" Margin="0,0,8,8" />
+          <Button Classes="accent" Content="+ New item" Command="{Binding NewItemCommand}" Margin="0,0,8,8" />
+        </WrapPanel>
+      </StackPanel>
+
+      <Grid x:Name="Split" ColumnDefinitions="*,16,380" RowDefinitions="*,Auto">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Bottom" Classes="muted" FontSize="11" Margin="4,6,0,10" Text="{Binding CountText}" />
+          <Panel>
+            <TextBlock Classes="muted" Text="No item here yet." Margin="4" IsVisible="{Binding HasNoVisibleItems}" />
+            <ListBox x:Name="ItemList" Classes="items" ItemsSource="{Binding VisibleItems}" SelectedItem="{Binding SelectedItem}" Background="Transparent">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:WikiItemVm">
+                  <Grid ColumnDefinitions="44,*,Auto">
+                    <Border Classes="subtle" Width="36" Height="36" Padding="2" HorizontalAlignment="Left">
+                      <Panel>
+                        <Image Source="{Binding PicturePath, Converter={x:Static c:PathImageConverter.Instance}}" Stretch="Uniform"
+                               IsVisible="{Binding HasPicture}" />
+                        <TextBlock Text="🛍" FontSize="16" Opacity="0.35" IsVisible="{Binding !HasPicture}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Panel>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Classes="muted" FontSize="11" Text="{Binding SectionLabel}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="🛒" Opacity="0.7" VerticalAlignment="Center" IsVisible="{Binding IsSold}"
+                               ToolTip.Tip="{Binding SoldIn}" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Panel>
+        </DockPanel>
+
+        <!-- ── Details ── -->
+        <ScrollViewer x:Name="DetailsPane" Grid.Column="2" Margin="0,0,0,12">
+          <Panel>
+            <TextBlock Classes="muted" Text="Select an item to see and edit it." IsVisible="{Binding !HasItem}" />
+            <Panel IsVisible="{Binding HasItem}">
+            <StackPanel DataContext="{Binding SelectedItem}" x:DataType="vm:WikiItemVm">
+              <Border Classes="card">
+                <StackPanel Spacing="8">
+                  <Grid ColumnDefinitions="Auto,*">
+                    <StackPanel Spacing="4">
+                      <Button Classes="picture" Command="{Binding ChoosePictureCommand}" ToolTip.Tip="Choose a picture (optional)">
+                        <Panel>
+                          <Image Source="{Binding PicturePath, Converter={x:Static c:PathImageConverter.Instance}}" Stretch="Uniform"
+                                 IsVisible="{Binding HasPicture}" />
+                          <TextBlock Text="🖼" FontSize="28" Opacity="0.5" IsVisible="{Binding !HasPicture}"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Panel>
+                      </Button>
+                      <Button Classes="small" Content="Remove" Command="{Binding RemovePictureCommand}" IsVisible="{Binding HasPicture}"
+                              HorizontalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
+                      <TextBlock Classes="label" Text="Name" />
+                      <TextBox Text="{Binding Name}" Watermark="Item name" Classes.missing="{Binding IsNameMissing}" />
+                      <TextBlock Classes="bad" FontSize="11" Text="A name is required." IsVisible="{Binding IsNameMissing}" />
+                      <TextBlock Classes="bad" FontSize="11" Text="Another item has this name." IsVisible="{Binding IsDuplicate}" TextWrapping="Wrap" />
+                      <TextBlock Classes="label" Text="Section" Margin="0,4,0,0" />
+                      <ComboBox ItemsSource="{Binding $parent[UserControl].((vm:ItemWikiViewModel)DataContext).SectionChoices}"
+                                SelectedItem="{Binding SectionChoice}" HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                  </Grid>
+                  <TextBlock Classes="label" Text="Effect" />
+                  <TextBox Text="{Binding Effect}" Watermark="What the item does" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" MaxHeight="200" />
+                  <TextBlock Classes="label" Text="Description" />
+                  <TextBox Text="{Binding Description}" Watermark="Notes, lore, where to find it…" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" MaxHeight="260" />
+                </StackPanel>
+              </Border>
+
+              <Border Classes="card" IsVisible="{Binding IsSold}">
+                <StackPanel Spacing="4">
+                  <TextBlock Classes="section-title" Text="Sold in" />
+                  <SelectableTextBlock Text="{Binding SoldIn}" TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+
+              <Button Classes="danger" Content="Delete item"
+                      Command="{Binding $parent[UserControl].((vm:ItemWikiViewModel)DataContext).DeleteItemCommand}" Margin="0,0,0,12" />
+            </StackPanel>
+            </Panel>
+          </Panel>
+        </ScrollViewer>
+      </Grid>
+    </DockPanel>
+  </Grid>
+</UserControl>

@@ -32,6 +32,7 @@ server: **sheets are saved on your computer and can be reopened and edited at an
 | **Shops** | — | Stock of your marts and merchants: items with a name, quantity, price, optional picture and effect; JSON export / import. Two views: |
 | ↳ Shop view | — | The selected shop's items as cards (picture, price, stock; sold-out items greyed). |
 | ↳ Edit | — | Create, rename, duplicate, delete, import and export shops, and edit their items. |
+| **Item Wiki** | — | Every item of the game, sorted in sections: the shops' items are added automatically, and you can add your own. |
 | **Tools** | — | Four tools, one at a time, switched at the top of the page: |
 | ↳ Dice Rolls | Pokemon Dice Rolls | Encounter, capture, shiny and card rolls, plus a free dice-expression roller. |
 | ↳ Type Chart | — | Type effectiveness of the 21 types (18 official + Light, Data, Sound) and the damage taken by any single or dual type. |
@@ -205,6 +206,16 @@ The stock of the marts and merchants of your game, in its own section of the sid
 ] }
 ```
 
+### Item Wiki
+Every item of your game in one place, in its own entry of the sidebar. Saved automatically in `wiki/items.json`.
+- Each time the page opens (or with **🛒 Scan shops**), the items sold in the shops that the wiki doesn't
+  have yet (same name, ignoring case) are added to **Unsorted**, with their effect and picture.
+- **+ New item** adds an item of your own (in the section shown). Each item has a name, a section, an
+  effect, a description and an optional picture; items sold in a shop list those shops with price and stock.
+- **Sections**: **+ New section**, then **Rename**, **↑ / ↓** (order) and **Delete** (its items go back to
+  Unsorted). Move an item with its **Section** picker, or drag it with the mouse onto a section of the left column.
+- Deleting an item that a shop still sells is allowed, but it comes back at the next scan.
+
 | Pokédex | Team card export |
 |---|---|
 | ![Pokédex](docs/screenshots/pokedex.png) | ![Team card](docs/screenshots/team-card-export.png) |
@@ -250,6 +261,7 @@ PokemonRpgStudio/
 ├── zones/<id>.json      one file per encounter zone
 ├── whiteboard/          board.json + images/ (pictures added to the whiteboard)
 ├── shops/               shops.json + images/ (pictures of the shop items)
+├── wiki/                items.json + images/ (pictures of the item wiki)
 ├── data/                pokemon.json, moves.json, abilities.json + images/ — the game data the app reads
 └── settings.json        theme, export URL, dice numbers
 ```
