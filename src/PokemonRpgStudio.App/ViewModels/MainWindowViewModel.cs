@@ -76,7 +76,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ShopEditor = new ShopEditorViewModel(Shops);
         ShopViewer = new ShopViewerViewModel(Shops, () => ShopsSection.Show(ShopEditor));
         ItemWiki = new ItemWikiViewModel(services, Shops);
-        Settings = new SettingsViewModel(services);
+        Settings = new SettingsViewModel(services, Shops);
         SheetsSection = new SectionViewModel(services, "sheets", "Sheets", "📝",
             new SectionTab("list", "List view", "📝", Sheets),
             new SectionTab("database", "Database view", "🗂", SheetList));

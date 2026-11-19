@@ -352,6 +352,7 @@ public sealed partial class SheetsViewModel : PageViewModel
     [ObservableProperty] private string _tutorMovesText = "";
     [ObservableProperty] private string _notes = "";
     [ObservableProperty] private string _tutorNotes = "";
+    [ObservableProperty] private string _heldObject = "";
     public ObservableCollection<RollLogEntry> RollLog { get; } = new();
 
     // ── Tabs: sheets open at the same time ───────────────────────────────────
@@ -406,6 +407,7 @@ public sealed partial class SheetsViewModel : PageViewModel
     public bool IsFainted => HasSheet && CurrentHp <= 0;
     public bool HasNotes => !string.IsNullOrWhiteSpace(Notes);
     public bool HasTutorNotes => !string.IsNullOrWhiteSpace(TutorNotes);
+    public bool HasHeldObject => !string.IsNullOrWhiteSpace(HeldObject);
     public bool HasNoTeams => Teams.Count == 0;
     public bool HasRolls => RollLog.Count > 0;
     public bool HasNoMoves => HasSheet && Moves.Count == 0;
@@ -476,6 +478,7 @@ public sealed partial class SheetsViewModel : PageViewModel
     partial void OnTeamsChanged(IReadOnlyList<TeamRecord> value) => OnPropertyChanged(nameof(HasNoTeams));
     partial void OnNotesChanged(string value) => OnPropertyChanged(nameof(HasNotes));
     partial void OnTutorNotesChanged(string value) => OnPropertyChanged(nameof(HasTutorNotes));
+    partial void OnHeldObjectChanged(string value) => OnPropertyChanged(nameof(HasHeldObject));
 
     partial void OnCurrentHpChanged(int value) => NotifyHp();
     partial void OnMaxHpChanged(int value) => NotifyHp();
@@ -865,6 +868,7 @@ public sealed partial class SheetsViewModel : PageViewModel
         Nickname = record.Nickname;
         Notes = record.Notes;
         TutorNotes = state.TutorNotes;
+        HeldObject = state.HeldObject;
         HasSheet = true;
         _loadingFolders = true;
         SheetFolder = FindMoveOption(record.Folder);

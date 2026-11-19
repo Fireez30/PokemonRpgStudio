@@ -190,6 +190,11 @@ public static partial class MarkdownSheetImporter
         // Notes: "egg moves : A,B" / "TM moves : …" / "tutor moves : …" then free text.
         // Hand-edited sheets also write "Egg move : A", "egg move list : A, B" or placeholders ("?", "todo", "/").
         var notesLines = sections.GetValueOrDefault("notes") ?? new List<string>();
+        // "object held : Leftovers" (written by the desktop exports).
+        var heldPattern = new Regex(@"^(object|item)\s+held\s*:(?<v>.*)$", RegexOptions.IgnoreCase);
+        if (notesLines.Select(l => heldPattern.Match(l.Trim())).FirstOrDefault(m => m.Success) is { } held)
+            state.HeldObject = held.Groups["v"].Value.Trim();
+        notesLines = notesLines.Where(l => !heldPattern.IsMatch(l.Trim())).ToList();
         List<string> NameList(string kind)
         {
             foreach (var l in notesLines)

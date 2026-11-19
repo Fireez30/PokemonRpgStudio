@@ -575,6 +575,33 @@ public class StorageTests : IDisposable
     }
 
     [Fact]
+    public void Export_all_bundles_are_imported_back()
+    {
+        var source = new UserLibrary(new AppPaths(Path.Combine(_dir, "source")));
+        var sheet = new SheetRecord { Nickname = "Sparky", PokemonName = "pikachu" };
+        sheet.State.ChosenPokemon = "pikachu";
+        sheet.State.HeldObject = "Light Ball";
+        source.Sheets.Save(sheet);
+        source.Sheets.Save(new SheetRecord { Nickname = "Leafy", PokemonName = "bulbasaur" });
+        source.Teams.Save(new TeamRecord { Name = "Main" });
+        source.Zones.Save(new ZoneRecord { Name = "Forest" });
+
+        var bundles = Path.Combine(_dir, "bundles");
+        Directory.CreateDirectory(bundles);
+        File.WriteAllText(Path.Combine(bundles, "all-sheets.json"), LibraryExporter.ExportAll(source.Sheets));
+        File.WriteAllText(Path.Combine(bundles, "all-teams.json"), LibraryExporter.ExportAll(source.Teams));
+        File.WriteAllText(Path.Combine(bundles, "all-zones.json"), LibraryExporter.ExportAll(source.Zones));
+
+        var target = new UserLibrary(new AppPaths(Path.Combine(_dir, "target")));
+        var report = WebsiteImporter.ImportPath(bundles, target);
+        Assert.Equal((2, 1, 1, 0), (report.Sheets, report.Teams, report.Zones, report.Skipped));
+        var imported = target.Sheets.Get(sheet.Id)!;
+        Assert.Equal("Light Ball", imported.State.HeldObject);
+        Assert.Equal("Main", target.Teams.List().Single().Name);
+        Assert.Equal("Forest", target.Zones.List().Single().Name);
+    }
+
+    [Fact]
     public void Sprites_are_plain_files_filled_from_the_defaults_and_replaceable()
     {
         var defaults = Path.Combine(_dir, "defaults", "images");
@@ -665,6 +692,7 @@ public class MarkdownImportTests : IClassFixture<DataFixture>
         state.LockedEggMoves.Add(state.EggMoves[0]);
         state.TutorPointsAdjustment = -2;
         state.TutorNotes = "Spent on Fire Punch\nSaving 1";
+        state.HeldObject = "Charcoal";
 
         var md = SheetExporter.ToMarkdown(SheetSnapshot.Create(state, sp, _data, "Line one\nLine two", "Blaze"));
         var result = MarkdownSheetImporter.Parse(md, _data, "charmander.md");
@@ -684,6 +712,7 @@ public class MarkdownImportTests : IClassFixture<DataFixture>
         Assert.Equal("Line one\nLine two", result.Sheet.Notes);
         Assert.Equal(-2, s2.TutorPointsAdjustment);
         Assert.Equal("Spent on Fire Punch\nSaving 1", s2.TutorNotes);
+        Assert.Equal("Charcoal", s2.HeldObject);
         Assert.True(SheetRules.IsComplete(s2));
     }
 

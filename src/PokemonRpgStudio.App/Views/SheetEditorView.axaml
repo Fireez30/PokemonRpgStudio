@@ -410,6 +410,13 @@
 
           <Border Classes="card" IsVisible="{Binding HasSpecies}">
             <StackPanel Spacing="8">
+              <TextBlock Classes="section-title" Text="Object held" />
+              <TextBox Text="{Binding HeldObject}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="40" MaxHeight="160" Watermark="Object held by this Pokémon (name, effect…)" />
+            </StackPanel>
+          </Border>
+
+          <Border Classes="card" IsVisible="{Binding HasSpecies}">
+            <StackPanel Spacing="8">
               <TextBlock Classes="section-title" Text="Notes" />
               <TextBox Text="{Binding Notes}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90" Watermark="Free notes about this Pokémon (added at the end of the exported sheet)…" />
             </StackPanel>

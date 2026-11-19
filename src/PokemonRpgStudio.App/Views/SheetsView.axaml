@@ -521,7 +521,9 @@
 
             <!-- other moves & notes -->
             <Border Classes="card">
-              <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
+              <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
+                <TextBlock Grid.Row="5" Classes="label" Text="Object held" VerticalAlignment="Top" IsVisible="{Binding HasHeldObject}" />
+                <SelectableTextBlock Grid.Row="5" Grid.Column="1" Text="{Binding HeldObject}" TextWrapping="Wrap" IsVisible="{Binding HasHeldObject}" />
                 <TextBlock Classes="label" Text="Egg moves" />
                 <TextBlock Grid.Column="1" Text="{Binding EggMovesText}" TextWrapping="Wrap" />
                 <TextBlock Grid.Row="1" Classes="label" Text="TM moves" />

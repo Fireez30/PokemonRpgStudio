@@ -247,33 +247,19 @@ public static class WebsiteImporter
             }
             try
             {
-                var node = JsonNode.Parse(File.ReadAllText(file)) as JsonObject;
-                if (node is null) { skipped++; continue; }
-                if (node.ContainsKey("state") || node.ContainsKey("pokemonName"))
+                var root = JsonNode.Parse(File.ReadAllText(file));
+                // A bundle written by "Export all" (Settings) is an array of records.
+                var nodes = root is JsonArray array ? array.ToList() : new List<JsonNode?> { root };
+                foreach (var item in nodes)
                 {
-                    var rec = node.Deserialize<SheetRecord>(JsonDefaults.Options)!;
-                    if (string.IsNullOrWhiteSpace(rec.Nickname)) rec.Nickname = rec.PokemonName;
-                    if (string.IsNullOrWhiteSpace(rec.State.ChosenPokemon)) rec.State.ChosenPokemon = rec.PokemonName;
-                    library.Sheets.Save(rec, touch: false);
-                    sheets++;
+                    switch (item is JsonObject node ? ImportRecord(node, file, library) : RecordKind.None)
+                    {
+                        case RecordKind.Sheet: sheets++; break;
+                        case RecordKind.Team: teams++; break;
+                        case RecordKind.Zone: zones++; break;
+                        default: skipped++; break;
+                    }
                 }
-                else if (node.ContainsKey("slots"))
-                {
-                    var rec = node.Deserialize<TeamRecord>(JsonDefaults.Options)!;
-                    rec.Normalize();
-                    library.Teams.Save(rec, touch: false);
-                    teams++;
-                }
-                else if (node.ContainsKey("sections"))
-                {
-                    var rec = node.Deserialize<ZoneRecord>(JsonDefaults.Options)!;
-                    if (string.IsNullOrWhiteSpace(rec.Name)) rec.Name = rec.ZoneName ?? Path.GetFileNameWithoutExtension(file);
-                    rec.ZoneName = null;
-                    if (!node.ContainsKey("id")) rec.Id = Guid.NewGuid().ToString();
-                    library.Zones.Save(rec, touch: false);
-                    zones++;
-                }
-                else skipped++;
             }
             catch (Exception)
             {
@@ -282,4 +268,52 @@ public static class WebsiteImporter
         }
         return new ImportReport(sheets, teams, zones, skipped, warnings);
     }
+
+    private enum RecordKind { None, Sheet, Team, Zone }
+
+    private static RecordKind ImportRecord(JsonObject node, string file, UserLibrary library)
+    {
+        try
+        {
+            if (node.ContainsKey("state") || node.ContainsKey("pokemonName"))
+            {
+                var rec = node.Deserialize<SheetRecord>(JsonDefaults.Options)!;
+                if (string.IsNullOrWhiteSpace(rec.Nickname)) rec.Nickname = rec.PokemonName;
+                if (string.IsNullOrWhiteSpace(rec.State.ChosenPokemon)) rec.State.ChosenPokemon = rec.PokemonName;
+                library.Sheets.Save(rec, touch: false);
+                return RecordKind.Sheet;
+            }
+            if (node.ContainsKey("slots"))
+            {
+                var rec = node.Deserialize<TeamRecord>(JsonDefaults.Options)!;
+                rec.Normalize();
+                library.Teams.Save(rec, touch: false);
+                return RecordKind.Team;
+            }
+            if (node.ContainsKey("sections"))
+            {
+                var rec = node.Deserialize<ZoneRecord>(JsonDefaults.Options)!;
+                if (string.IsNullOrWhiteSpace(rec.Name)) rec.Name = rec.ZoneName ?? Path.GetFileNameWithoutExtension(file);
+                rec.ZoneName = null;
+                if (!node.ContainsKey("id")) rec.Id = Guid.NewGuid().ToString();
+                library.Zones.Save(rec, touch: false);
+                return RecordKind.Zone;
+            }
+        }
+        catch (Exception)
+        {
+            // Invalid record: counted as skipped.
+        }
+        return RecordKind.None;
+    }
+}
+
+/// <summary>
+/// "Export all": every record of a store in one JSON file (an array of records, each in the same shape as
+/// its own file). <see cref="WebsiteImporter"/> reads these files back.
+/// </summary>
+public static class LibraryExporter
+{
+    public static string ExportAll<T>(JsonRecordStore<T> store) where T : class, IStoredRecord =>
+        JsonSerializer.Serialize(store.List(), JsonDefaults.Options);
 }

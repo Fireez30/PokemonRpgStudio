@@ -89,6 +89,20 @@
 
       <Border Classes="card">
         <StackPanel Spacing="10">
+          <TextBlock Classes="section-title" Text="Export all" />
+          <TextBlock Classes="muted" TextWrapping="Wrap"
+                     Text="Saves every record of a section in one JSON file (a backup, or to move them to another device). Sheets, teams and zones files are read back with 'Import files…' below; shops files with the Shops page's Import button (pictures included)." />
+          <WrapPanel>
+            <Button Content="Export all sheets…" Command="{Binding ExportAllSheetsCommand}" Margin="0,0,8,6" />
+            <Button Content="Export all teams…" Command="{Binding ExportAllTeamsCommand}" Margin="0,0,8,6" />
+            <Button Content="Export all encounter zones…" Command="{Binding ExportAllZonesCommand}" Margin="0,0,8,6" />
+            <Button Content="Export all shops…" Command="{Binding Shops.ExportAllCommand}" Margin="0,0,8,6" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="10">
           <TextBlock Classes="section-title" Text="Import from the website" />
           <TextBlock Classes="muted" Text="Pick the website's server/ folder to import every sheet (pokemon_cards/), team (teams/) and zone (zones/). You can also pick individual files: JSON sheets / teams / zones (including zones saved with the Encounter Generator's 'Save JSON' button) and the Markdown sheets made by the website's 'Generate Markdown' button. Ids are kept, so imported teams still point to their sheets." />
           <WrapPanel>

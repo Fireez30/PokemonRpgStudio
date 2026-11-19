@@ -85,6 +85,7 @@ public sealed partial class SheetEditorViewModel : PageViewModel
     [ObservableProperty] private int _tutorPoints;
     [ObservableProperty] private string _tutorPointsDetail = "";
     [ObservableProperty] private string _tutorNotes = "";
+    [ObservableProperty] private string _heldObject = "";
 
     [ObservableProperty] private IReadOnlyList<MoveOption> _levelMoveOptions = Array.Empty<MoveOption>();
     [ObservableProperty] private IReadOnlyList<MoveOption> _eggMoveOptions = Array.Empty<MoveOption>();
@@ -289,6 +290,7 @@ public sealed partial class SheetEditorViewModel : PageViewModel
         BuffedStat = NullIfEmpty(state.BuffedStat);
         LoweredStat = NullIfEmpty(state.LoweredStat);
         TutorNotes = state.TutorNotes;
+        HeldObject = state.HeldObject;
         BuildStatRows();
         RebuildAbilities();
         RebuildMoveOptions();
@@ -356,6 +358,7 @@ public sealed partial class SheetEditorViewModel : PageViewModel
     partial void OnLoweredStatChanged(string? value) { if (!_loading) { _state.LoweredStat = value ?? ""; Changed(); } }
 
     partial void OnTutorNotesChanged(string value) { if (!_loading) { _state.TutorNotes = value; MarkDirty(); } }
+    partial void OnHeldObjectChanged(string value) { if (!_loading) { _state.HeldObject = value; MarkDirty(); } }
 
     partial void OnAutoSaveChanged(bool value)
     {

@@ -24,9 +24,13 @@ public sealed partial class SettingsViewModel : PageViewModel
     [ObservableProperty] private string _spritesInfo = "";
     public string Version => typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
 
-    public SettingsViewModel(AppServices services)
+    /// <summary>The shops (exported with their pictures by the Shops page's own command).</summary>
+    public ShopsViewModel Shops { get; }
+
+    public SettingsViewModel(AppServices services, ShopsViewModel shops)
     {
         _services = services;
+        Shops = shops;
         _theme = services.Settings.Theme;
         _imageBaseUrl = services.Settings.ImageBaseUrl;
         RefreshStatus();
@@ -122,6 +126,33 @@ public sealed partial class SettingsViewModel : PageViewModel
     {
         _services.Settings.ImageBaseUrl = string.IsNullOrWhiteSpace(value) ? Core.Export.SheetExporter.DefaultImageBaseUrl : value.Trim();
         _services.SaveSettings();
+    }
+
+    // ---- Export all ----
+
+    [RelayCommand] private Task ExportAllSheets() => ExportAllAsync(_services.Library.Sheets, "sheets", "sheet(s)");
+    [RelayCommand] private Task ExportAllTeams() => ExportAllAsync(_services.Library.Teams, "teams", "team(s)");
+    [RelayCommand] private Task ExportAllZones() => ExportAllAsync(_services.Library.Zones, "zones", "zone(s)");
+
+    private async Task ExportAllAsync<T>(JsonRecordStore<T> store, string fileName, string what) where T : class, Core.Models.IStoredRecord
+    {
+        try
+        {
+            var count = store.List().Count;
+            if (count == 0)
+            {
+                _services.Dialogs.Notify($"There is no {what.Replace("(s)", "")} to export.", isError: true);
+                return;
+            }
+            var json = LibraryExporter.ExportAll(store);
+            if (!await _services.Dialogs.SaveFileAsync($"Export all {fileName}", $"all-{fileName}.json", DialogService.JsonFiles,
+                    path => File.WriteAllTextAsync(path, json))) return;
+            _services.Dialogs.Notify($"Exported {count} {what}.");
+        }
+        catch (Exception ex)
+        {
+            _services.Dialogs.Notify("Could not export: " + ex.Message, isError: true);
+        }
     }
 
     [RelayCommand] private void OpenUserFolder() => _services.Dialogs.OpenInFileManager(UserFolder);

@@ -154,6 +154,7 @@ public static class SheetExporter
         if (!string.IsNullOrWhiteSpace(st.TutorNotes)) sb.Append("Tutor notes :\n").Append(st.TutorNotes.Trim()).Append("\n\n");
         sb.Append('\n');
         sb.Append("## **Notes**\n\n");
+        if (!string.IsNullOrWhiteSpace(st.HeldObject)) sb.Append($"object held : {OneLine(st.HeldObject)}\n");
         sb.Append($"egg moves : {NamesOrNone(st.EggMoves)}\n");
         sb.Append($"TM moves : {NamesOrNone(st.TmMoves)}\n");
         sb.Append($"tutor moves : {NamesOrNone(st.TutorMoves)}\n");
@@ -162,6 +163,8 @@ public static class SheetExporter
     }
 
     private static string H(string? s) => WebUtility.HtmlEncode(s ?? "");
+    /// <summary>Text on one line (Markdown "key : value" lines).</summary>
+    private static string OneLine(string s) => string.Join(" ", s.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
 
     /// <summary>HTML fragment pasted into Google Docs / Word (website "Copy google doc version").</summary>
     public static string ToHtmlFragment(SheetSnapshot s, string imageBaseUrl = DefaultImageBaseUrl)
@@ -223,6 +226,7 @@ public static class SheetExporter
         sb.Append($"<p><b>Tutor points:</b> {s.TutorPoints}</p>");
         if (!string.IsNullOrWhiteSpace(st.TutorNotes)) sb.Append($"<p><b>Tutor notes:</b><br>{H(st.TutorNotes.Trim()).Replace("\n", "<br>")}</p>");
         sb.Append("<h2>Notes</h2>");
+        if (!string.IsNullOrWhiteSpace(st.HeldObject)) sb.Append($"<p><b>Object held:</b> {H(st.HeldObject.Trim()).Replace("\n", "<br>")}</p>");
         sb.Append($"<p>Egg moves: {H(NamesOrNone(st.EggMoves).Replace(",", ", "))}</p>");
         sb.Append($"<p>TM moves: {H(NamesOrNone(st.TmMoves).Replace(",", ", "))}</p>");
         sb.Append($"<p>Tutor moves: {H(NamesOrNone(st.TutorMoves).Replace(",", ", "))}</p>");

@@ -23,6 +23,7 @@ public static class SheetSearch
             SheetRules.NatureName(s.BuffedStat, s.LoweredStat),
             s.Level > 0 ? "lv" + SheetRules.FormatLevel(s.Level) : null,
             record.Notes,
+            s.HeldObject,
             record.Folder,
         };
         if (species != null) parts.AddRange(species.PokemonTypes);

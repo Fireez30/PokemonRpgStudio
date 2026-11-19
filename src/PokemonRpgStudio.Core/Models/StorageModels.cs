@@ -89,6 +89,9 @@ public sealed class SheetState
     /// <summary>Desktop-only: free notes about the tutor points (what they were spent on…).</summary>
     [JsonPropertyName("tutor_notes")] public string TutorNotes { get; set; } = "";
 
+    /// <summary>Desktop-only: free text describing the object held by the Pokémon.</summary>
+    [JsonPropertyName("pokemon_held_object")] public string HeldObject { get; set; } = "";
+
     /// <summary>Desktop-only: every nature rolled for this sheet, so the player can pick their favourite.</summary>
     [JsonPropertyName("rolled_natures"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public List<RolledNature>? RolledNatures { get; set; }
