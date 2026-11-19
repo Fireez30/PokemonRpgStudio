@@ -36,6 +36,13 @@ public sealed class SheetState
     [JsonPropertyName("pokemon_experience"), JsonConverter(typeof(FlexibleIntConverter))]
     public int Experience { get => _experience; set => _experience = Math.Clamp(value, 0, Rules.SheetRules.MaxExperience); }
     private int _experience;
+    /// <summary>
+    /// Loyalty of the Pokémon (1…10). Sheets saved before this field load with 1; out-of-range
+    /// values are clamped.
+    /// </summary>
+    [JsonPropertyName("pokemon_loyalty"), JsonConverter(typeof(FlexibleIntConverter))]
+    public int Loyalty { get => _loyalty; set => _loyalty = Math.Clamp(value, Rules.SheetRules.MinLoyalty, Rules.SheetRules.MaxLoyalty); }
+    private int _loyalty = Rules.SheetRules.MinLoyalty;
     [JsonPropertyName("pokemon_rarity")] public string Rarity { get; set; } = "Normal";
     [JsonPropertyName("pokemon_card")] public string Card { get; set; } = "None";
     [JsonPropertyName("pokemon_gender")] public string Gender { get; set; } = "";

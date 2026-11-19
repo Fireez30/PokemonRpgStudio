@@ -236,6 +236,7 @@
                   <WrapPanel>
                     <Border Classes="chip"><TextBlock Text="{Binding LevelText}" FontWeight="Bold" /></Border>
                     <Border Classes="chip"><TextBlock Text="{Binding ExperienceText}" /></Border>
+                    <Border Classes="chip"><TextBlock Text="{Binding LoyaltyText}" /></Border>
                     <Border Classes="chip"><TextBlock Text="{Binding RarityText, StringFormat='Rarity {0}'}" /></Border>
                     <Border Classes="chip"><TextBlock Text="{Binding CardText, StringFormat='Card {0}'}" /></Border>
                     <Border Classes="chip"><TextBlock Text="{Binding GenderText}" /></Border>

@@ -693,6 +693,7 @@ public class MarkdownImportTests : IClassFixture<DataFixture>
         state.TutorPointsAdjustment = -2;
         state.TutorNotes = "Spent on Fire Punch\nSaving 1";
         state.HeldObject = "Charcoal";
+        state.Loyalty = 7;
 
         var md = SheetExporter.ToMarkdown(SheetSnapshot.Create(state, sp, _data, "Line one\nLine two", "Blaze"));
         var result = MarkdownSheetImporter.Parse(md, _data, "charmander.md");
@@ -713,6 +714,7 @@ public class MarkdownImportTests : IClassFixture<DataFixture>
         Assert.Equal(-2, s2.TutorPointsAdjustment);
         Assert.Equal("Spent on Fire Punch\nSaving 1", s2.TutorNotes);
         Assert.Equal("Charcoal", s2.HeldObject);
+        Assert.Equal(7, s2.Loyalty);
         Assert.True(SheetRules.IsComplete(s2));
     }
 
@@ -1348,6 +1350,39 @@ public class ExperienceTests
         var state = new SheetState { Experience = 73 };
         Assert.Contains("\"pokemon_experience\":73", JsonSerializer.Serialize(state, JsonDefaults.Compact));
         Assert.Equal(73, state.Clone().Experience);
+    }
+}
+
+public class LoyaltyTests
+{
+    [Fact]
+    public void Old_sheets_without_loyalty_load_with_one()
+    {
+        var json = """{"id":"a","nickname":"Old","pokemonName":"pikachu","state":{"chosen_pokemon":"pikachu","pokemon_level":12}}""";
+        var record = JsonSerializer.Deserialize<SheetRecord>(json, JsonDefaults.Options)!;
+        Assert.Equal(1, record.State.Loyalty);
+        Assert.Equal(1, new SheetState().Loyalty);
+    }
+
+    [Theory]
+    [InlineData("4", 4)]
+    [InlineData("\"8\"", 8)]
+    [InlineData("15", 10)]   // clamped to the maximum
+    [InlineData("0", 1)]
+    [InlineData("-3", 1)]
+    [InlineData("null", 1)]
+    public void Loyalty_is_read_and_kept_between_1_and_10(string value, int expected)
+    {
+        var state = JsonSerializer.Deserialize<SheetState>($$"""{"pokemon_loyalty":{{value}}}""", JsonDefaults.Options)!;
+        Assert.Equal(expected, state.Loyalty);
+    }
+
+    [Fact]
+    public void Loyalty_is_saved_and_survives_a_clone()
+    {
+        var state = new SheetState { Loyalty = 6 };
+        Assert.Contains("\"pokemon_loyalty\":6", JsonSerializer.Serialize(state, JsonDefaults.Compact));
+        Assert.Equal(6, state.Clone().Loyalty);
     }
 }
 

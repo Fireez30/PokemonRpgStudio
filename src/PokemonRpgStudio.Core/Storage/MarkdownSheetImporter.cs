@@ -105,6 +105,10 @@ public static partial class MarkdownSheetImporter
             && double.TryParse(lv.Value.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var level))
             state.Level = Math.Clamp(level, 1, SheetRules.MaxLevel);
         else warnings.Add("Level not found: set to 1.");
+        // "Loyalty: 7" (written by the desktop exports); older sheets have none and keep 1.
+        if (NumberRegex().Match(Field("Loyalty", "Loyauté")) is { Success: true } loy
+            && double.TryParse(loy.Value.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var loyalty))
+            state.Loyalty = (int)Math.Round(loyalty);
         ParseNature(Field("Nature"), state, warnings);
 
         // ── Level-up points from "**Max ATK**: 5+3+6=14" ────────────────────

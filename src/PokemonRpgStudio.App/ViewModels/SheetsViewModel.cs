@@ -321,6 +321,7 @@ public sealed partial class SheetsViewModel : PageViewModel
     [ObservableProperty] private TypeMatchups _matchups = TypeMatchups.Empty;
     [ObservableProperty] private string _levelText = "";
     [ObservableProperty] private string _experienceText = "";
+    [ObservableProperty] private string _loyaltyText = "";
     [ObservableProperty] private string _rarityText = "";
     [ObservableProperty] private string _cardText = "";
     [ObservableProperty] private string _genderText = "";
@@ -903,6 +904,7 @@ public sealed partial class SheetsViewModel : PageViewModel
         Matchups = TypeMatchups.For(_services.Data.TypeChart, species.PokemonTypes);
         LevelText = state.Level > 0 ? $"Lv. {SheetRules.FormatLevel(state.Level)}" : "Lv. —";
         ExperienceText = $"XP {state.Experience} / {SheetRules.MaxExperience}";
+        LoyaltyText = $"Loyalty {state.Loyalty} / {SheetRules.MaxLoyalty}";
         RarityText = Chip(state.Rarity, SheetRules.TierSymbol(state.Rarity));
         CardText = Chip(state.Card, SheetRules.TierSymbol(state.Card));
         GenderText = Chip(state.Gender, SheetRules.GenderSymbol(state.Gender));

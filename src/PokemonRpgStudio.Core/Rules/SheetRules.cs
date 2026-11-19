@@ -11,6 +11,9 @@ public static class SheetRules
     public const int MaxLevel = 150;
     /// <summary>Experience of a sheet goes from 0 to 100.</summary>
     public const int MaxExperience = 100;
+    /// <summary>Loyalty of a sheet goes from 1 to 10.</summary>
+    public const int MinLoyalty = 1;
+    public const int MaxLoyalty = 10;
     /// <summary>Rows of the first move table; a separator splits the 6th and 7th move.</summary>
     public const int FirstTableMoves = 6;
     /// <summary>Minimum number of rows of the exported move table (empty rows are added).</summary>

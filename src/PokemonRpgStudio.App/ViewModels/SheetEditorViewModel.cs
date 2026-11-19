@@ -48,6 +48,7 @@ public sealed partial class SheetEditorViewModel : PageViewModel
 
     [ObservableProperty] private double _level;
     [ObservableProperty] private int _experience;
+    [ObservableProperty] private int _loyalty = SheetRules.MinLoyalty;
     [ObservableProperty] private string? _rarity;
     [ObservableProperty] private string? _card;
     [ObservableProperty] private string? _gender;
@@ -284,6 +285,7 @@ public sealed partial class SheetEditorViewModel : PageViewModel
             : "";
         Level = state.Level;
         Experience = state.Experience;
+        Loyalty = state.Loyalty;
         Rarity = NullIfEmpty(state.Rarity);
         Card = NullIfEmpty(state.Card);
         Gender = NullIfEmpty(state.Gender);
@@ -348,6 +350,19 @@ public sealed partial class SheetEditorViewModel : PageViewModel
             return;
         }
         _state.Experience = clamped;
+        MarkDirty();
+    }
+
+    partial void OnLoyaltyChanged(int value)
+    {
+        if (_loading) return;
+        var clamped = Math.Clamp(value, SheetRules.MinLoyalty, SheetRules.MaxLoyalty);
+        if (clamped != value)
+        {
+            Loyalty = clamped;
+            return;
+        }
+        _state.Loyalty = clamped;
         MarkDirty();
     }
 

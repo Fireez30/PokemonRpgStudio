@@ -114,6 +114,11 @@
                                      ToolTip.Tip="Experience of the Pokémon, from 0 to 100" />
                     </StackPanel>
                     <StackPanel Margin="0,0,12,8" Spacing="4">
+                      <TextBlock Classes="label" Text="Loyalty" />
+                      <NumericUpDown Value="{Binding Loyalty}" Minimum="1" Maximum="10" Increment="1" Width="130" FormatString="0"
+                                     ToolTip.Tip="Loyalty of the Pokémon, from 1 to 10" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,12,8" Spacing="4">
                       <TextBlock Classes="label" Text="Rarity" />
                       <ComboBox ItemsSource="{Binding RarityOptions}" SelectedItem="{Binding Rarity}" Width="130" PlaceholderText="Pick…" />
                     </StackPanel>
@@ -289,6 +294,7 @@
                       <WrapPanel>
                         <Border Classes="chip"><TextBlock Text="{Binding Level, StringFormat='Lv. {0}'}" FontWeight="Bold" /></Border>
                         <Border Classes="chip"><TextBlock Text="{Binding Experience, StringFormat='XP {0} / 100'}" /></Border>
+                        <Border Classes="chip"><TextBlock Text="{Binding Loyalty, StringFormat='Loyalty {0} / 10'}" /></Border>
                         <Border Classes="chip"><TextBlock Text="{Binding Rarity, StringFormat='Rarity: {0}', TargetNullValue='Rarity: —'}" /></Border>
                         <Border Classes="chip"><TextBlock Text="{Binding Card, StringFormat='Card: {0}', TargetNullValue='Card: —'}" /></Border>
                         <Border Classes="chip"><TextBlock Text="{Binding Gender, StringFormat='Gender: {0}', TargetNullValue='Gender: —'}" /></Border>

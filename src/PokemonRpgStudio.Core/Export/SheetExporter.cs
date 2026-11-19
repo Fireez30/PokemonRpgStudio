@@ -96,6 +96,7 @@ public static class SheetExporter
         sb.Append("Item: \n");
         sb.Append($"Nature: {s.Nature}\n");
         sb.Append($"Level: {SheetRules.FormatLevel(st.Level)}\n");
+        sb.Append($"Loyalty: {st.Loyalty}\n");
         sb.Append($"Type: {string.Join(",", sp.PokemonTypes)}\n");
         sb.Append($"Rarity: {st.Rarity}\n");
         sb.Append($"Weight: {sp.Weight}\n");
@@ -177,7 +178,7 @@ public static class SheetExporter
         sb.Append($"<h1>{H(Formatting.Capitalize(sp.Name))}</h1>");
         sb.Append("<p>")
           .Append($"Card: {H(st.Card)}<br>Gender: {H(st.Gender)}<br>Item:<br>Nature: {H(s.Nature)}<br>")
-          .Append($"Level: {SheetRules.FormatLevel(st.Level)}<br>Type: {H(string.Join(",", sp.PokemonTypes))}<br>Rarity: {H(st.Rarity)}<br>")
+          .Append($"Level: {SheetRules.FormatLevel(st.Level)}<br>Loyalty: {st.Loyalty}<br>Type: {H(string.Join(",", sp.PokemonTypes))}<br>Rarity: {H(st.Rarity)}<br>")
           .Append($"Weight: {H(sp.Weight)}<br>Height: {H(sp.Height)}</p>");
 
         sb.Append("<h2>Abilities</h2>").Append(table).Append("<tr><th>Ability</th><th>Effect</th></tr>");
